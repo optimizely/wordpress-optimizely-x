@@ -3,11 +3,11 @@
 /**
  * Register all actions and filters for the plugin
  *
- * @link       http://example.com
+ * @link       https://www.optimizely.com
  * @since      1.0.0
  *
- * @package    Plugin_Name
- * @subpackage Plugin_Name/includes
+ * @package    Optimizely_X
+ * @subpackage Optimizely_X/includes
  */
 
 /**
@@ -17,11 +17,11 @@
  * the plugin, and register them with the WordPress API. Call the
  * run function to execute the list of actions and filters.
  *
- * @package    Plugin_Name
- * @subpackage Plugin_Name/includes
+ * @package    Optimizely_X
+ * @subpackage Optimizely_X/includes
  * @author     Your Name <email@example.com>
  */
-class Plugin_Name_Loader {
+class Optimizely_X_Loader {
 
 	/**
 	 * The array of actions registered with WordPress.
@@ -115,7 +115,6 @@ class Plugin_Name_Loader {
 	 * @since    1.0.0
 	 */
 	public function run() {
-
 		foreach ( $this->filters as $hook ) {
 			add_filter( $hook['hook'], array( $hook['component'], $hook['callback'] ), $hook['priority'], $hook['accepted_args'] );
 		}
