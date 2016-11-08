@@ -122,14 +122,6 @@ class Optimizely_X_Public {
 			return false;
 		}
 	}
-	/**
-	 * Return the meta key format used for all post title variations.
-	 * @param int $i
-	 * @return string
-	 */
-	function optimizely_meta_key( $i ) {
-		return 'post_title' . absint( $i );
-	}
 
 
 	/**
@@ -176,7 +168,7 @@ class Optimizely_X_Public {
 	 * Check capabilites for creating experiments.
 	 */
 	function optimizely_can_create_experiments() {
-		return get_option( 'optimizely_token', false ) && get_option( 'optimizely_project_id', false );
+		return get_option( 'optimizely_token', false ) && get_option( 'optimizely_project_id', false ) && intval(get_option( 'optimizely_project_id', false )) != 0;
 	}
 
 }

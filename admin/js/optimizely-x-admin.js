@@ -19,21 +19,21 @@
 
   var loadPage = function(){
 		var data = {
-		  'action': 'is_authenticated'
+		  'action': 'get_projects'
 		};
 		$.ajax({
 		  url: ajaxurl,
 		  data: data,
 		  dataType: 'json'
 		}).done(function(data){
-			if(data && data.authorized && data.authorized === 'AUTHENTICATED'){
+			if(data && data.status && data.status === 'SUCCESS'){
 				$('.authenticated').removeClass('hidden');
 				setProjectOptions(data.projects);
 				createSnippet();
-			} else if (data && data.authorized && data.authorized === 'NOTOKEN') {
+			} else if (data && data.status && data.status === 'NOTOKEN') {
 				$('.authenticated').removeClass('hidden');
 			} else {
-				$('.authenticated .retry-button').removeClass('hidden');
+				$('.unauthenticated .optimizely_authentication .retry-button').removeClass('hidden');
 				$('.invalid_token').removeClass('hidden');
 				$('.unauthenticated').removeClass('hidden');
 			}

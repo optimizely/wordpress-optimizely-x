@@ -34,7 +34,7 @@
     	</div>
   		<div class="narrow">
   			<form action="" method="post" id="optimizely-conf">
-  				<div id="optimizely_authentication" class='section ui-tabs-panel'>
+  				<div class="optimizely_authentication" class='section ui-tabs-panel'>
   					<?php include( dirname( __FILE__ ) . '/sections/auth.php' ); ?>
   				</div>
   			</form>
@@ -96,7 +96,7 @@
     <div id="tabs-3" class="tabs">
       <div class="narrow">
         <form action="" method="post" id="optimizely-conf">
-          <div id="optimizely_authentication" class='section'>
+          <div class="optimizely_authentication" class='section'>
             <?php include( dirname( __FILE__ ) . '/sections/auth.php' ); ?>
           </div>
         </form>

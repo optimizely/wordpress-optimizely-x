@@ -11,7 +11,7 @@
 </p>
 <p class="submit">
 	<input type="submit" name="submit" value="<?php esc_html_e( 'Submit &raquo;', 'optimizely' ); ?>" class="button-primary" />
-	<span class="hidden retry-botton">
+	<span class="hidden retry-button">
 		<input type="submit" value="<?php esc_html_e( 'Retry &raquo;', 'optimizely' ); ?>" class="button-secondary" />
 	</span>
 </p>

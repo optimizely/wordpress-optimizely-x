@@ -121,6 +121,11 @@ class Optimizely_X {
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'public/class-optimizely-x-public.php';
 
 		/**
+		 * The class responsible for defining all api actions.
+		 */
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-optimizely-x-api.php';
+
+		/**
 		 * The class responsible for defining all ajax actions.
 		 */
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-optimizely-x-ajax.php';
@@ -191,8 +196,12 @@ class Optimizely_X {
 	 * @access   private
 	 */
 	private function define_ajax_actions() {
-		$plugin_ajax = new Optimizely_X_Api( );
-		$this->loader->add_action( 'wp_ajax_is_authenticated', $plugin_ajax, 'is_authenticated' );
+		$plugin_ajax = new Optimizely_X_Ajax( );
+		$this->loader->add_action( 'wp_ajax_get_projects', $plugin_ajax, 'get_projects' );
+		$this->loader->add_action( 'wp_ajax_create_experiment', $plugin_ajax, 'create_experiment' );
+		$this->loader->add_action( 'wp_ajax_change_status', $plugin_ajax, 'change_status' );
+
+
 
 
 	}
