@@ -31,11 +31,16 @@ class Optimizely_X_Api {
 				'body' => json_encode($data)
 			));
 		} else if ($method == "PATCH") {
+			$body = '{}';
+			if(count($data) != 0) {
+				$body = json_encode($data);
+			}
+
 			$response = wp_remote_request($url, array(
 				'headers' => array(
 					'Authorization' => 'Bearer ' . $token
 				),
-				'body' => json_encode($data),
+				'body' => $body,
 				'method' => 'PATCH'
 			));
 		} else if ($method == "DELETE") {

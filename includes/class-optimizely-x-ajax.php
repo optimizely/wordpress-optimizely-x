@@ -107,7 +107,6 @@ class Optimizely_X_Ajax {
 		$variation['actions'][0]['changes'][0]['dependencies'] = array();
 		$variation['actions'][0]['changes'][0]['async'] = False;
 		$variation['actions'][0]['changes'][0]['value'] = $code;
-		$variation['actions'][0]['changes'][0]['id'] = $this->generate_uuid();
 
 		return $variation;
 	}
@@ -221,18 +220,18 @@ class Optimizely_X_Ajax {
 			die(json_encode($experiment_response));
 		}
 
-		// Cleanup
+		// Cleanup when archived pages work again
 
-		$delete_targeting_response = $this->api->request('DELETE', 'https://api.optimizely.com/v2/pages/'.$targeting_id, array(), true);
-		if($delete_targeting_response['status'] != 'SUCCESS'){
-			$delete_targeting_response['error'][] = "An error occured during the deletion of the targeting page.";
-			die(json_encode($delete_targeting_response));
-		}
-		$delete_event_response = $this->api->request('DELETE', 'https://api.optimizely.com/v2/pages/'.$event_id, array(), true);
-		if($delete_event_response['status'] != 'SUCCESS'){
-			$delete_event_response['error'][] = "An error occured during the deletion of the event page.";
-			die(json_encode($delete_event_response));
-		}
+		// $delete_targeting_response = $this->api->request('DELETE', 'https://api.optimizely.com/v2/pages/'.$targeting_id, array(), true);
+		// if($delete_targeting_response['status'] != 'SUCCESS'){
+		// 	$delete_targeting_response['error'][] = "An error occured during the deletion of the targeting page.";
+		// 	die(json_encode($delete_targeting_response));
+		// }
+		// $delete_event_response = $this->api->request('DELETE', 'https://api.optimizely.com/v2/pages/'.$event_id, array(), true);
+		// if($delete_event_response['status'] != 'SUCCESS'){
+		// 	$delete_event_response['error'][] = "An error occured during the deletion of the event page.";
+		// 	die(json_encode($delete_event_response));
+		// }
 
 		add_post_meta($post->ID, 'optimizely_experiment_id', $experiment_response['json']['id']);
 		add_post_meta($post->ID, 'optimizely_experiment_status', 'paused');
@@ -259,15 +258,18 @@ class Optimizely_X_Ajax {
 		$status = $_POST['status'];
 
 		$experiment_id = get_post_meta($post_id, 'optimizely_experiment_id');
+		if(isset($experiment_id) && count($experiment_id) > 0){
+		  $experiment_id = $experiment_id[0];
+			if($status == 'paused'){
+				$experiment_response = $this->api->request('PATCH', 'https://api.optimizely.com/v2/experiments/'.$experiment_id.'?action=publish_start', array(), true);
+			} else {
+				$experiment_response = $this->api->request('PATCH', 'https://api.optimizely.com/v2/experiments/'.$experiment_id.'?action=pause', array(), true);
+			}
+			die(json_encode($experiment_response));
+		}
 
-		$experiment_response = $this->api->request('PATCH', 'https://api.optimizely.com/v2/experiments/'.$experiment_id, array(), true);
 
-		$fake_response = array();
-		$fake_response['status'] = 'SUCCESS';
-		$fake_response['json'] = array();
-		$fake_response['json']['status'] = 'paused';
 
-		die(json_encode($fake_response));
 	}
 
 }
