@@ -1,5 +1,4 @@
 === Optimizely X ===
-
 Contributors: arthuracs, jonslaught, bradtaylorsf
 Tags: optimizely, ab testing, split testing, website optimization
 Requires at least: 3.0
@@ -19,7 +18,6 @@ This plugin helps you configure your WordPress website to use Optimizely. After 
 You'll need an [Optimizely.com](http://www.optimizely.com) account to use it.
 
 == Installation ==
-
 Sign up at [Optimizely.com](http://www.optimizely.com).
 
 1. Upload the Optimizely WordPress plugin to your blog
