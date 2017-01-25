@@ -1,5 +1,5 @@
 === Optimizely X ===
-Contributors: arthuracs, jonslaught, bradtaylorsf
+Contributors: arthuracs, jonslaught, bradtaylorsf, lucasoptimizely
 Tags: optimizely, ab testing, split testing, website optimization
 Requires at least: 3.0
 Tested up to: 4.4
