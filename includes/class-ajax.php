@@ -1,26 +1,19 @@
 <?php
-
 /**
- * The admin-specific functionality of the plugin.
+ * Optimizely X: AJAX class
  *
- * @link       https://www.optimizely.com
- * @since      1.0.0
- *
- * @package    Optimizely_X
- * @subpackage Optimizely_X/admin
+ * @package Optimizely_X
+ * @since 1.0.0
  */
 
+namespace Optimizely_X;
+
 /**
- * The admin-specific functionality of the plugin.
+ * Defines AJAX endpoints that communicate with the API.
  *
- * Defines the plugin name, version, and two examples hooks for how to
- * enqueue the admin-specific stylesheet and JavaScript.
- *
- * @package    Optimizely_X
- * @subpackage Optimizely_X/admin
- * @author     Your Name <email@example.com>
+ * @since 1.0.0
  */
-class Optimizely_X_Ajax {
+class AJAX {
 
 	private $api;
 
@@ -31,7 +24,7 @@ class Optimizely_X_Ajax {
 	 * @param      string    $token       The Optimizely API Personal Token
 	 */
 	public function __construct( ) {
-		$this->api = new Optimizely_X_Api();
+		$this->api = new API;
 	}
 
 	function get_projects() {

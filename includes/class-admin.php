@@ -1,14 +1,14 @@
 <?php
-
 /**
- * The admin-specific functionality of the plugin.
+ * Optimizely X: Admin class
  *
- * @link       https://www.optimizely.com
- * @since      1.0.0
- *
- * @package    Optimizely_X
- * @subpackage Optimizely_X/admin
+ * @package Optimizely_X
+ * @since 1.0.0
  */
+
+namespace Optimizely_X;
+
+// TODO: Convert these to class constants.
 define( 'OPTIMIZELY_DEFAULT_VARIATION_TEMPLATE', 'var utils = window[\'optimizely\'].get(\'utils\');
 utils.waitForElement(\'.post-$POST_ID h1\').then(function() {
     var element = document.querySelector(\'.post-$POST_ID h1\');
@@ -20,17 +20,16 @@ define( 'OPTIMIZELY_DEFAULT_CONDITIONAL_TEMPLATE', 'function pollingFn() {
 }' );
 define( 'OPTIMIZELY_NUM_VARIATIONS', 2 );
 define( 'OPTIMIZELY_NONCE', 'optimizely-update-code' );
+
 /**
  * The admin-specific functionality of the plugin.
  *
  * Defines the plugin name, version, and two examples hooks for how to
  * enqueue the admin-specific stylesheet and JavaScript.
  *
- * @package    Optimizely_X
- * @subpackage Optimizely_X/admin
- * @author     Your Name <email@example.com>
+ * @since 1.0.0
  */
-class Optimizely_X_Admin {
+class Admin {
 
 	/**
 	 * The ID of this plugin.
@@ -234,7 +233,7 @@ class Optimizely_X_Admin {
 		echo('<div class="optimizely_admin">');
 
 		if ( isset( $_POST['submit'] ) ) {
-			Optimizely_X_Admin::optimizely_store_post_data();
+			self::optimizely_store_post_data();
 		}
 
 		$loading_image = esc_url( plugin_dir_url( __FILE__ ) ).'images/ajax-loader.gif';

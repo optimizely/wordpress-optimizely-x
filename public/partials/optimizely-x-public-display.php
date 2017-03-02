@@ -18,27 +18,27 @@ function optimizely_meta_key( $i ) {
 }
 
 echo '<div class="optimizely_loading hidden">';
-require_once plugin_dir_path( __FILE__ ) . 'states/loading.php';
+require_once OPTIMIZELY_X_BASE_DIR . '/public/partials/states/loading.php';
 echo '</div>';
 
 if ( ! $this->optimizely_can_create_experiments() ) {
-  require_once plugin_dir_path( __FILE__ ) . 'states/unauthenticated.php';
+  require_once OPTIMIZELY_X_BASE_DIR . '/public/partials/states/unauthenticated.php';
 } else {
   if(get_post_status($post->ID) == 'publish'){
     if(get_post_meta( $post->ID, 'optimizely_experiment_id', true )){
       echo '<div class="optimizely_running_experiment">';
-      require_once plugin_dir_path( __FILE__ ) . 'states/running.php';
+      require_once OPTIMIZELY_X_BASE_DIR . '/public/partials/states/running.php';
       echo '</div>';
     } else {
       echo '<div class="optimizely_new_experiment">';
-      require_once plugin_dir_path( __FILE__ ) . 'states/new.php';
+      require_once OPTIMIZELY_X_BASE_DIR . '/public/partials/states/new.php';
       echo '</div>';
       echo '<div class="hidden optimizely_running_experiment">';
-        require_once plugin_dir_path( __FILE__ ) . 'states/running.php';
+        require_once OPTIMIZELY_X_BASE_DIR . '/public/partials/states/running.php';
       echo '</div>';
     }
   } else {
-    require_once plugin_dir_path( __FILE__ ) . 'states/unpublished.php';
+    require_once OPTIMIZELY_X_BASE_DIR . '/public/partials/states/unpublished.php';
   }
 }
 ?>

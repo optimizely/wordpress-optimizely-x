@@ -1,27 +1,23 @@
 <?php
-
 /**
- * Register all actions and filters for the plugin
+ * Optimizely X: Core class
  *
- * @link       https://www.optimizely.com
- * @since      1.0.0
- *
- * @package    Optimizely_X
- * @subpackage Optimizely_X/includes
+ * @package Optimizely_X
+ * @since 1.0.0
  */
 
+namespace Optimizely_X;
+
 /**
- * Register all actions and filters for the plugin.
+ * Registers all actions and filters for the plugin.
  *
- * Maintain a list of all hooks that are registered throughout
- * the plugin, and register them with the WordPress API. Call the
- * run function to execute the list of actions and filters.
+ * Maintains a list of all hooks that are registered throughout the plugin, and
+ * registers them with the WordPress API. Calls the run function to execute the list
+ * of actions and filters.
  *
- * @package    Optimizely_X
- * @subpackage Optimizely_X/includes
- * @author     Your Name <email@example.com>
+ * @since 1.0.0
  */
-class Optimizely_X_Loader {
+class Loader {
 
 	/**
 	 * The array of actions registered with WordPress.

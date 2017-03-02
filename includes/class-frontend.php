@@ -1,26 +1,22 @@
 <?php
+/**
+ * Optimizely X: Frontend class
+ *
+ * @package Optimizely_X
+ * @since 1.0.0
+ */
+
+namespace Optimizely_X;
 
 /**
  * The public-facing functionality of the plugin.
  *
- * @link
- * @since      1.0.0
+ * Defines the plugin name, version, and two examples hooks for how to enqueue the
+ * admin-specific stylesheet and JavaScript.
  *
- * @package    Optimizely_X
- * @subpackage Optimizely_X/public
+ * @since 1.0.0
  */
-
-/**
- * The public-facing functionality of the plugin.
- *
- * Defines the plugin name, version, and two examples hooks for how to
- * enqueue the admin-specific stylesheet and JavaScript.
- *
- * @package    Optimizely_X
- * @subpackage Optimizely_X/public
- * @author     Your Name <email@example.com>
- */
-class Optimizely_X_Public {
+class Frontend {
 
 	/**
 	 * The ID of this plugin.
@@ -106,7 +102,7 @@ class Optimizely_X_Public {
 		$this->enqueue_post_styles();
 		$this->enqueue_post_scripts();
 		$loading_image = esc_url( plugin_dir_url( __FILE__ ) ).'images/ajax-loader.gif';
-		require_once plugin_dir_path( __FILE__ ) . 'partials/optimizely-x-public-display.php';
+		require_once OPTIMIZELY_X_BASE_DIR . '/public/partials/optimizely-x-public-display.php';
 	}
 
 	/**

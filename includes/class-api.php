@@ -1,6 +1,19 @@
 <?php
+/**
+ * Optimizely X: API class
+ *
+ * @package Optimizely_X
+ * @since 1.0.0
+ */
 
-class Optimizely_X_Api {
+namespace Optimizely_X;
+
+/**
+ * A class to handle communication with the Optimizely REST API.
+ *
+ * @since 1.0.0
+ */
+class API {
 
 	/**
 	 * Initialize the class and set its properties.
