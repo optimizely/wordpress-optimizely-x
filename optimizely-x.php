@@ -48,33 +48,27 @@ function optimizely_x_load_class( $class ) {
 	// Set project-specific namespace prefix.
 	$prefix = 'Optimizely_X\\';
 
-	// Set base directory for the namespace prefix.
-	$base_dir = OPTIMIZELY_X_BASE_DIR . '/includes/';
-
-	// Determine if the class uses the namespace prefix.
-	$len = strlen( $prefix );
-	if ( strncmp( $prefix, $class, $len ) !== 0 ) {
+	// Determine if the requested class is in this project's namespace.
+	$class = ltrim( $class, '\\' );
+	if ( strpos( $class, $prefix ) !== 0 ) {
 		return;
 	}
 
-	// Convert to WordPress-standard class naming convention.
-	$relative_class = strtolower( substr( $class, $len ) );
-	$relative_class = str_replace(
-		array( '_', '\\' ),
-		array( '-', '/' ),
-		$relative_class
+	// Convert class name to WordPress standard conventions.
+	$class = strtolower(
+		str_replace( array( $prefix, '_' ), array( '', '-' ), $class )
 	);
-	$pos = strrpos( $relative_class, '/' );
-	$pos = ( ! empty( $pos ) ) ? $pos + 1 : 0;
-	$relative_class = substr_replace( $relative_class, 'class-', $pos, 0 );
 
-	// Construct the filename using the transformed class name.
-	$file = $base_dir . $relative_class . '.php';
+	// Treat the class name as a path and split into parts.
+	$dirs = explode( '\\', $class );
 
-	// If the file exists, require it.
-	if ( file_exists( $file ) ) {
-		require_once $file;
-	}
+	// Remove the name of the class from the directory path.
+	$class = array_pop( $dirs );
+
+	// Include the class file.
+	require_once OPTIMIZELY_X_BASE_DIR
+		. rtrim( '/includes/' . implode( '/', $dirs ), '/' )
+		. '/class-' . $class . '.php';
 }
 
 // Initialize the autoloader.
