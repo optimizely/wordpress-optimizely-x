@@ -186,22 +186,6 @@ class Core {
 	}
 
 	/**
-	 * Define the locale for this plugin for internationalization.
-	 *
-	 * Uses the I18N class in order to set the domain and to register the hook with
-	 * WordPress.
-	 *
-	 * @since 1.0.0
-	 * @access private
-	 */
-	private function set_locale() {
-		add_action(
-			'plugins_loaded',
-			array( 'Optimizely_X\\I18N', 'load_plugin_textdomain' )
-		);
-	}
-
-	/**
 	 * Define the core functionality of the plugin.
 	 *
 	 * Set the plugin name and the plugin version that can be used throughout the
@@ -212,8 +196,10 @@ class Core {
 	 * @access private
 	 */
 	private function setup() {
+		I18N::instance();
+
+		// TODO: Refactor to use singleton instance pattern.
 		$this->loader = new Loader;
-		$this->set_locale();
 		$this->define_admin_hooks();
 		$this->define_public_hooks();
 		$this->define_ajax_actions();
