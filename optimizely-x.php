@@ -37,6 +37,14 @@ if ( ! defined( 'WPINC' ) ) {
 define( 'OPTIMIZELY_X_BASE_DIR', __DIR__ );
 
 /**
+ * The base URL for all Optimizely X plugin files.
+ *
+ * @since 1.0.0
+ * @var string
+ */
+define( 'OPTIMIZELY_X_BASE_URL', untrailingslashit( plugin_dir_url( __FILE__ ) ) );
+
+/**
  * An autoloader callback for loading classes in the Optimizely_X namespace.
  *
  * @param string $class The class name that was referenced.

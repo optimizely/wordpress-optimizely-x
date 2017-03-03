@@ -101,36 +101,6 @@ class Core {
 	}
 
 	/**
-	 * Register all of the hooks related to the admin area functionality of the
-	 * plugin.
-	 *
-	 * @since 1.0.0
-	 * @access private
-	 */
-	private function define_admin_hooks() {
-		$this->loader->add_action(
-			'admin_menu',
-			'Optimizely_X\\Admin',
-			'optimizely_admin_menu'
-		);
-		$this->loader->add_action(
-			'admin_notices',
-			'Optimizely_X\\Admin',
-			'optimizely_admin_notices'
-		);
-		$this->loader->add_action(
-			'admin_enqueue_scripts',
-			'Optimizely_X\\Admin',
-			'enqueue_styles'
-		);
-		$this->loader->add_action(
-			'admin_enqueue_scripts',
-			'Optimizely_X\\Admin',
-			'enqueue_scripts'
-		);
-	}
-
-	/**
 	 * Register the ajax functions for the admin area.
 	 *
 	 * @since 1.0.0
@@ -196,11 +166,11 @@ class Core {
 	 * @access private
 	 */
 	private function setup() {
+		Admin::instance();
 		I18N::instance();
 
 		// TODO: Refactor to use singleton instance pattern.
 		$this->loader = new Loader;
-		$this->define_admin_hooks();
 		$this->define_public_hooks();
 		$this->define_ajax_actions();
 		$this->loader->run();

@@ -32,43 +32,59 @@ define( 'OPTIMIZELY_NONCE', 'optimizely-update-code' );
 class Admin {
 
 	/**
-	 * The ID of this plugin.
+	 * Singleton instance.
 	 *
-	 * @since    1.0.0
-	 * @access   private
-	 * @var      string    $plugin_name    The ID of this plugin.
+	 * @since 1.0.0
+	 * @access private
+	 * @var Admin
 	 */
-	private $plugin_name;
+	private static $instance;
 
 	/**
-	 * The version of this plugin.
+	 * Gets the singleton instance.
 	 *
-	 * @since    1.0.0
-	 * @access   private
-	 * @var      string    $version    The current version of this plugin.
+	 * @since 1.0.0
+	 * @access public
+	 *
+	 * @return Admin
 	 */
-	private $version;
+	public static function instance() {
+
+		// Initialize the instance, if necessary.
+		if ( ! isset( self::$instance ) ) {
+			self::$instance = new Admin;
+			self::$instance->setup();
+		}
+
+		return self::$instance;
+	}
 
 	/**
-	 * Initialize the class and set its properties.
+	 * Add Optimizely to the admin menu.
 	 *
-	 * @since    1.0.0
-	 * @param      string    $plugin_name       The name of this plugin.
-	 * @param      string    $version    The version of this plugin.
+	 * @since 1.0.0
+	 * @access public
 	 */
-	public function __construct( $plugin_name, $version ) {
-
-		$this->plugin_name = $plugin_name;
-		$this->version = $version;
-
+	public function add_menu_page() {
+		add_menu_page(
+			__( 'Optimizely', 'optimizely-x' ),
+			__( 'Optimizely', 'optimizely-x' ),
+			// TODO: Move to central filter class and add appropriate docblock.
+			apply_filters( 'optimizely_admin_capability', 'manage_options' ),
+			'optimizely-config',
+			array( $this, 'optimizely_configuration' ),
+			OPTIMIZELY_X_BASE_URL . '/admin/images/optimizely-icon.png'
+		);
 	}
 
 	/**
 	 * Display admin notices for the plugin.
 	 *
 	 * @todo Move this to a partial.
+	 *
+	 * @access public
 	 */
-	function optimizely_admin_notices() {
+	public function admin_notices() {
 		if ( ! get_option( 'optimizely_token' ) && ! isset( $_POST['submit'] ) ) :
 			?>
 			<div id="optimizely-warning" class="updated fade">
@@ -94,46 +110,103 @@ class Admin {
 	}
 
 	/**
-	 * Register the stylesheets for the admin area.
+	 * Enqueues scripts and styles on Optimizely admin pages.
 	 *
-	 * @since    1.0.0
-	 */
-	public function enqueue_styles() {
-
-	}
-
-  /**
-	 * Register the stylesheets for the admin area if the configuration page is
-   * loaded.
+	 * @param string $hook The admin page the hook was called from.
 	 *
-	 * @since    1.0.0
+	 * @access public
 	 */
-	public function enqueue_configuration_styles() {
-		wp_enqueue_style( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'css/optimizely-x-admin.css', array( ), $this->version, 'all' );
-		wp_enqueue_style( 'jquery_ui_styles', plugins_url( 'css/jquery-ui.css', __FILE__ ) );
-	}
+	public function enqueue_scripts( $hook ) {
 
+		// Only fire for the Optimizely Configuration admin page.
+		if ( 'toplevel_page_optimizely-config' !== $hook ) {
+			return;
+		}
+
+		// Enqueue main admin stylesheet.
+		wp_enqueue_style(
+			Core::PLUGIN_SLUG . '_admin_style',
+			OPTIMIZELY_X_BASE_URL . '/admin/css/optimizely-x-admin.css',
+			array(),
+			Core::VERSION
+		);
+
+		// Enqueue Optimizely jQuery UI stylesheet.
+		wp_enqueue_style(
+			Core::PLUGIN_SLUG . '_admin_jquery_ui_style',
+			OPTIMIZELY_X_BASE_URL . '/admin/css/jquery-ui.css',
+			array(),
+			Core::VERSION
+		);
+
+		// Enqueue beautify.js.
+		wp_enqueue_script(
+			Core::PLUGIN_SLUG . '_beautify_js',
+			OPTIMIZELY_X_BASE_URL . '/admin/js/beautify.min.js',
+			array(),
+			Core::VERSION
+		);
+
+		// Enqueue main admin script.
+		wp_enqueue_script(
+			Core::PLUGIN_SLUG . '_admin_script',
+			OPTIMIZELY_X_BASE_URL . '/admin/js/optimizely-x-admin.js',
+			array(
+				'jquery',
+				'jquery-ui-core',
+				'jquery-ui-tabs',
+				'jquery-ui-progressbar',
+				'jquery-ui-tooltip',
+			),
+			Core::VERSION
+		);
+	}
 
 	/**
-	 * Register the JavaScript for the admin area.
+	 * Empty clone method, forcing the use of the instance() method.
 	 *
-	 * @since    1.0.0
+	 * @see self::instance()
+	 *
+	 * @access private
 	 */
-	public function enqueue_scripts() {
-
+	private function __clone() {
 	}
 
-  /**
-   * Register the JavaScript for the admin area if the configuration page is
-   * loaded.
-   *
-   * @since    1.0.0
-   */
-  public function enqueue_configuration_scripts() {
-    wp_enqueue_script( 'beautify-js', plugin_dir_url( __FILE__ ) . 'js/beautify.min.js', array( ), $this->version, false);
-    wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/optimizely-x-admin.js', array( 'jquery','jquery-ui-core', 'jquery-ui-tabs','jquery-ui-progressbar','jquery-ui-tooltip'), $this->version, false );
+	/**
+	 * Empty constructor, forcing the use of the instance() method.
+	 *
+	 * @see self::instance()
+	 *
+	 * @access private
+	 */
+	private function __construct() {
+	}
 
-  }
+	/**
+	 * Empty wakeup method, forcing the use of the instance() method.
+	 *
+	 * @see self::instance()
+	 *
+	 * @access private
+	 */
+	private function __wakeup() {
+	}
+
+	/**
+	 * Registers action and filter hooks.
+	 *
+	 * @since 1.0.0
+	 * @access private
+	 */
+	private function setup() {
+
+		// Register action hooks.
+		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
+		add_action( 'admin_menu', array( $this, 'add_menu_page' ) );
+		add_action( 'admin_notices', array( $this, 'admin_notices' ) );
+	}
+
+	// TODO: Refactor from here down.
 
 	public function optimizely_store_post_data() {
 
@@ -230,9 +303,6 @@ class Admin {
 
 	public function optimizely_configuration() {
 
-    $this->enqueue_configuration_scripts();
-    $this->enqueue_configuration_styles();
-
 		echo('<div class="optimizely_admin">');
 
 		if ( isset( $_POST['submit'] ) ) {
@@ -247,23 +317,5 @@ class Admin {
 		}
 		include( dirname( __FILE__ ) . '/partials/optimizely-x-admin-display.php' );
 		echo('</div>');
-	}
-
-	/**
-	 * Add Optimizely to the admin menu.
-	 *
-	 * @since 1.0.0
-	 * @access public
-	 */
-	public function optimizely_admin_menu() {
-		add_menu_page(
-			__( 'Optimizely', 'optimizely-x' ),
-			__( 'Optimizely', 'optimizely-x' ),
-			// TODO: Move to central filter class and add appropriate docblock.
-			apply_filters( 'optimizely_admin_capability', 'manage_options' ),
-			'optimizely-config',
-			array( &$this, 'optimizely_configuration' ),
-			plugin_dir_url( dirname( __FILE__ ) ) . 'admin/images/optimizely-icon.png'
-		);
 	}
 }
