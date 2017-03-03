@@ -11,44 +11,81 @@ namespace Optimizely_X;
 /**
  * The public-facing functionality of the plugin.
  *
- * Defines the plugin name, version, and two examples hooks for how to enqueue the
- * admin-specific stylesheet and JavaScript.
- *
  * @since 1.0.0
  */
 class Frontend {
 
 	/**
-	 * The ID of this plugin.
+	 * Singleton instance.
 	 *
-	 * @since    1.0.0
-	 * @access   private
-	 * @var      string    $plugin_name    The ID of this plugin.
+	 * @since 1.0.0
+	 * @access private
+	 * @var Frontend
 	 */
-	private $plugin_name;
+	private static $instance;
 
 	/**
-	 * The version of this plugin.
+	 * Gets the singleton instance.
 	 *
-	 * @since    1.0.0
-	 * @access   private
-	 * @var      string    $version    The current version of this plugin.
-	 */
-	private $version;
-
-	/**
-	 * Initialize the class and set its properties.
+	 * @since 1.0.0
+	 * @access public
 	 *
-	 * @since    1.0.0
-	 * @param      string    $plugin_name       The name of the plugin.
-	 * @param      string    $version    The version of this plugin.
+	 * @return Frontend
 	 */
-	public function __construct( $plugin_name, $version ) {
+	public static function instance() {
 
-		$this->plugin_name = $plugin_name;
-		$this->version = $version;
+		// Initialize the instance, if necessary.
+		if ( ! isset( self::$instance ) ) {
+			self::$instance = new Frontend;
+			self::$instance->setup();
+		}
 
+		return self::$instance;
 	}
+
+	/**
+	 * Empty clone method, forcing the use of the instance() method.
+	 *
+	 * @see self::instance()
+	 *
+	 * @access private
+	 */
+	private function __clone() {
+	}
+
+	/**
+	 * Empty constructor, forcing the use of the instance() method.
+	 *
+	 * @see self::instance()
+	 *
+	 * @access private
+	 */
+	private function __construct() {
+	}
+
+	/**
+	 * Empty wakeup method, forcing the use of the instance() method.
+	 *
+	 * @see self::instance()
+	 *
+	 * @access private
+	 */
+	private function __wakeup() {
+	}
+
+	/**
+	 * Registers action and filter hooks.
+	 *
+	 * @since 1.0.0
+	 * @access private
+	 */
+	private function setup() {
+
+		// Register action hooks.
+		add_action( 'wp_head', array( $this, 'inject_script' ), - 1000 );
+	}
+
+	// TODO: Refactor from here.
 
 	/**
 	 * Generates the Optimizely script tag.
@@ -62,7 +99,7 @@ class Frontend {
 	/**
 	 * Force Optimizely to load first in the head tag.
 	 */
-	function optimizely_add_script() {
+	function inject_script() {
 		$project_code = get_option( 'optimizely_project_code' );
 		$project_id = get_option( 'optimizely_project_id' );
 		if ( ! empty( $project_id ) ) {
@@ -79,91 +116,6 @@ class Frontend {
 			delete_option( 'optimizely_project_code' );
 			echo $this->optimizely_generate_script( $project_id );
 		}
-	}
-
-	/**
-	 * When users go to write their posts, they'll see a new section for A/B testing headlines.
-	 * This section will include inputs for users to write alternate headlines and a button to create the experiment.
-	 * We also use several hidden input fields to store data about the project and experiment.
-	 * These are used in edit.js to send AJAX requests to the Optimizely API.
-	 */
-	/**
-	 * Add the meta box for title variations.
-	 */
-	function optimizely_title_variations_add() {
-		// Only add the module if the current post type is one the user selected in the admin tab.
-		if ( $this->optimizely_is_post_type_enabled( get_post_type() ) ) {
-			add_meta_box(
-				'optimizely-headlines',
-				esc_attr__( 'A/B Test Headlines', 'optimizely-x' ),
-				array( &$this, 'optimizely_title_variations_render' ),
-				get_post_type(),
-				'side',
-				'high'
-			);
-		}
-	}
-
-	function optimizely_title_variations_render( $post ) {
-		$this->enqueue_post_styles();
-		$this->enqueue_post_scripts();
-		$loading_image = esc_url( plugin_dir_url( __FILE__ ) ).'images/ajax-loader.gif';
-		require_once OPTIMIZELY_X_BASE_DIR . '/public/partials/optimizely-x-public-display.php';
-	}
-
-	/**
-	 * Check if this is a post type that uses Optimizely.
-	 * @param string $post_type
-	 * @return boolean
-	 */
-	function optimizely_is_post_type_enabled( $post_type ) {
-		$selected_post_types = explode( ',', get_option( 'optimizely_post_types' ) );
-		if ( ! empty( $selected_post_types ) && in_array( $post_type, $selected_post_types ) ) {
-			return true;
-		} else {
-			return false;
-		}
-	}
-
-
-	/**
-	 * Register the stylesheets for the public-facing side of the site.
-	 *
-	 * @since    1.0.0
-	 */
-	public function enqueue_styles() {
-
-	}
-
-	/**
-	 * Register the JavaScript for the public-facing side of the site.
-	 *
-	 * @since    1.0.0
-	 */
-	public function enqueue_scripts() {
-
-	}
-
-	/**
-	 * Register the stylesheets for the public-facing side of the site.
-	 *
-	 * @since    1.0.0
-	 */
-	public function enqueue_post_styles() {
-
-		wp_enqueue_style( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'css/optimizely-x-public.css', array(), $this->version, 'all' );
-
-	}
-
-	/**
-	 * Register the JavaScript for the public-facing side of the site.
-	 *
-	 * @since    1.0.0
-	 */
-	public function enqueue_post_scripts() {
-
-		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/optimizely-x-public.js', array( 'jquery' ), $this->version, false );
-
 	}
 
 	/**

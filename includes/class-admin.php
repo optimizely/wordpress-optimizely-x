@@ -24,9 +24,6 @@ define( 'OPTIMIZELY_NONCE', 'optimizely-update-code' );
 /**
  * The admin-specific functionality of the plugin.
  *
- * Defines the plugin name, version, and two examples hooks for how to
- * enqueue the admin-specific stylesheet and JavaScript.
- *
  * @since 1.0.0
  */
 class Admin {
@@ -78,6 +75,30 @@ class Admin {
 	}
 
 	/**
+	 * Add the meta box for title variations.
+	 *
+	 * @since 1.0.0
+	 * @access public
+	 */
+	public function add_meta_boxes() {
+
+		// Ensure Optimizely is enabled for this post type.
+		if ( ! $this->is_post_type_enabled( get_post_type() ) ) {
+			return;
+		}
+
+		// Add the meta box.
+		add_meta_box(
+			'optimizely-headlines',
+			esc_attr__( 'A/B Test Headlines', 'optimizely-x' ),
+			array( $this, 'metabox_headlines_render' ),
+			get_post_type(),
+			'side',
+			'high'
+		);
+	}
+
+	/**
 	 * Display admin notices for the plugin.
 	 *
 	 * @todo Move this to a partial.
@@ -118,48 +139,79 @@ class Admin {
 	 */
 	public function enqueue_scripts( $hook ) {
 
-		// Only fire for the Optimizely Configuration admin page.
-		if ( 'toplevel_page_optimizely-config' !== $hook ) {
-			return;
+		// Enqueue scripts and styles for the configuration page.
+		if ( 'toplevel_page_optimizely-config' === $hook ) {
+
+			// Enqueue main admin stylesheet.
+			wp_enqueue_style(
+				Core::PLUGIN_SLUG . '_admin_style',
+				OPTIMIZELY_X_BASE_URL . '/admin/css/optimizely-x-admin.css',
+				array(),
+				Core::VERSION
+			);
+
+			// Enqueue Optimizely jQuery UI stylesheet.
+			wp_enqueue_style(
+				Core::PLUGIN_SLUG . '_admin_jquery_ui_style',
+				OPTIMIZELY_X_BASE_URL . '/admin/css/jquery-ui.css',
+				array(),
+				Core::VERSION
+			);
+
+			// Enqueue beautify.js.
+			wp_enqueue_script(
+				Core::PLUGIN_SLUG . '_beautify_js',
+				OPTIMIZELY_X_BASE_URL . '/admin/js/beautify.min.js',
+				array(),
+				Core::VERSION
+			);
+
+			// Enqueue main admin script.
+			wp_enqueue_script(
+				Core::PLUGIN_SLUG . '_admin_script',
+				OPTIMIZELY_X_BASE_URL . '/admin/js/optimizely-x-admin.js',
+				array(
+					'jquery',
+					'jquery-ui-core',
+					'jquery-ui-tabs',
+					'jquery-ui-progressbar',
+					'jquery-ui-tooltip',
+				),
+				Core::VERSION
+			);
 		}
 
-		// Enqueue main admin stylesheet.
-		wp_enqueue_style(
-			Core::PLUGIN_SLUG . '_admin_style',
-			OPTIMIZELY_X_BASE_URL . '/admin/css/optimizely-x-admin.css',
-			array(),
-			Core::VERSION
-		);
+		// Enqueue scripts and styles for the post edit screen.
+		if ( 'post.php' === $hook ) {
 
-		// Enqueue Optimizely jQuery UI stylesheet.
-		wp_enqueue_style(
-			Core::PLUGIN_SLUG . '_admin_jquery_ui_style',
-			OPTIMIZELY_X_BASE_URL . '/admin/css/jquery-ui.css',
-			array(),
-			Core::VERSION
-		);
+			// Enqueue the meta box style.
+			wp_enqueue_style(
+				Core::PLUGIN_SLUG . '_meta_box_style',
+				OPTIMIZELY_X_BASE_URL . '/public/css/optimizely-x-public.css',
+				array(),
+				Core::VERSION
+			);
 
-		// Enqueue beautify.js.
-		wp_enqueue_script(
-			Core::PLUGIN_SLUG . '_beautify_js',
-			OPTIMIZELY_X_BASE_URL . '/admin/js/beautify.min.js',
-			array(),
-			Core::VERSION
-		);
+			// Enqueue the meta box script.
+			wp_enqueue_script(
+				Core::PLUGIN_SLUG . '_meta_box_script',
+				OPTIMIZELY_X_BASE_URL . '/public/js/optimizely-x-public.js',
+				array( 'jquery' ),
+				Core::VERSION
+			);
+		}
+	}
 
-		// Enqueue main admin script.
-		wp_enqueue_script(
-			Core::PLUGIN_SLUG . '_admin_script',
-			OPTIMIZELY_X_BASE_URL . '/admin/js/optimizely-x-admin.js',
-			array(
-				'jquery',
-				'jquery-ui-core',
-				'jquery-ui-tabs',
-				'jquery-ui-progressbar',
-				'jquery-ui-tooltip',
-			),
-			Core::VERSION
-		);
+	/**
+	 * Display the contents of the meta box.
+	 *
+	 * @param \WP_Post $post The post object for which to render the metabox.
+	 *
+	 * @access public
+	 */
+	public function metabox_headlines_render( $post ) {
+		$loading_image = OPTIMIZELY_X_BASE_URL . '/public/images/ajax-loader.gif';
+		require_once OPTIMIZELY_X_BASE_DIR . '/public/partials/optimizely-x-public-display.php';
 	}
 
 	/**
@@ -193,6 +245,25 @@ class Admin {
 	}
 
 	/**
+	 * Check if this is a post type that uses Optimizely.
+	 *
+	 * @param string $post_type The post type to check.
+	 *
+	 * @since 1.0.0
+	 * @access private
+	 * @return bool
+	 */
+	private function is_post_type_enabled( $post_type ) {
+
+		// Convert selected post types to an array.
+		$selected_post_types = explode( ',', get_option( 'optimizely_post_types' ) );
+
+		return ( is_array( $selected_post_types )
+			&& in_array( $post_type, $selected_post_types, true )
+		);
+	}
+
+	/**
 	 * Registers action and filter hooks.
 	 *
 	 * @since 1.0.0
@@ -201,6 +272,7 @@ class Admin {
 	private function setup() {
 
 		// Register action hooks.
+		add_action( 'add_meta_boxes', array( $this, 'add_meta_boxes' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
 		add_action( 'admin_menu', array( $this, 'add_menu_page' ) );
 		add_action( 'admin_notices', array( $this, 'admin_notices' ) );

@@ -101,37 +101,6 @@ class Core {
 	}
 
 	/**
-	 * Register all of the hooks related to the public-facing functionality of the
-	 * plugin.
-	 *
-	 * @since 1.0.0
-	 * @access private
-	 */
-	private function define_public_hooks() {
-		$this->loader->add_action(
-			'wp_head',
-			'Optimizely_X\\Frontend',
-			'optimizely_add_script',
-			- 1000
-		);
-		$this->loader->add_action(
-			'add_meta_boxes',
-			'Optimizely_X\\Frontend',
-			'optimizely_title_variations_add'
-		);
-		$this->loader->add_action(
-			'wp_enqueue_scripts',
-			'Optimizely_X\\Frontend',
-			'enqueue_styles'
-		);
-		$this->loader->add_action(
-			'wp_enqueue_scripts',
-			'Optimizely_X\\Frontend',
-			'enqueue_scripts'
-		);
-	}
-
-	/**
 	 * Define the core functionality of the plugin.
 	 *
 	 * Set the plugin name and the plugin version that can be used throughout the
@@ -144,11 +113,11 @@ class Core {
 	private function setup() {
 		Admin::instance();
 		AJAX::instance();
+		Frontend::instance();
 		I18N::instance();
 
 		// TODO: Refactor to use singleton instance pattern.
 		$this->loader = new Loader;
-		$this->define_public_hooks();
 		$this->loader->run();
 	}
 }
