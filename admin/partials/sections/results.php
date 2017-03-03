@@ -1,1 +1,1 @@
-<h3><?php esc_html_e( 'Results', 'optimizely' ); ?></h3>
+<h3><?php esc_html_e( 'Results', 'optimizely-x' ); ?></h3>

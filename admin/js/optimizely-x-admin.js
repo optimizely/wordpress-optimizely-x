@@ -19,7 +19,7 @@
 
   var loadPage = function(){
 		var data = {
-		  'action': 'get_projects'
+		  'action': 'optimizely_x_get_projects'
 		};
 		$.ajax({
 		  url: ajaxurl,

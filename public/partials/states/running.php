@@ -17,7 +17,7 @@ for ( $i = 0; $i < $num_variations; $i++ ) {
 	echo sprintf(
 		'<label for="%s">%s #%u</label><br>',
 		esc_attr( $meta_key ),
-		esc_html__( 'Variation', 'optimizely' ),
+		esc_html__( 'Variation', 'optimizely-x' ),
 		absint( $i + 1 )
 	);
 	$variation = get_post_meta( $post->ID, 'optimizely_variations_'.$i, true );
@@ -40,16 +40,15 @@ echo '</div>';
 <div id="optimizely_created">
 
 	<?php if($status == 'paused'){ ?>
-		<a id="optimizely_toggle_running" class="button-primary"><?php esc_html_e( 'Start Experiment', 'optimizely' ) ?></a>
+		<a id="optimizely_toggle_running" class="button-primary"><?php esc_html_e( 'Start Experiment', 'optimizely-x' ); ?></a>
 	<?php } else if ($status == 'running') { ?>
-		<a id="optimizely_toggle_running" class="button-primary"><?php esc_html_e( 'Pause Experiment', 'optimizely' ) ?></a>
+		<a id="optimizely_toggle_running" class="button-primary"><?php esc_html_e( 'Pause Experiment', 'optimizely-x' ); ?></a>
 	<?php } else { ?>
-		<a id="optimizely_toggle_running" class="button-primary" hidden><?php esc_html_e( 'Start Experiment', 'optimizely' ) ?></a>
+		<a id="optimizely_toggle_running" class="button-primary" hidden><?php esc_html_e( 'Start Experiment', 'optimizely-x' ); ?></a>
 	<?php } ?>
 
 	<p></p>
-	<a id="optimizely_view" href="<?php echo $link; ?>" class="button" target="_blank"><?php esc_html_e( 'View on Optimizely', 'optimizely' ) ?></a>
-	<p><?php esc_html_e( 'Status', 'optimizely' ) ?>: <b id="optimizely_experiment_status_text"><?php echo $status ?></b></p>
-	<p><?php esc_html_e( 'Experiment ID', 'optimizely' ) ?>: <b id="optimizely_experiment_id"><?php echo $experiment_id ?></b></p>
-	<!-- <?php esc_html_e( 'Results', 'optimizely' ) ?>: <a href="<?php echo esc_url( menu_page_url( 'optimizely-config', false ) ) ?>" id="optimizely_results" target="_blank"><?php esc_html_e( 'View Results', 'optimizely' ) ?></a></p> -->
+	<a id="optimizely_view" href="<?php echo esc_url( $link ); ?>" class="button" target="_blank"><?php esc_html_e( 'View on Optimizely', 'optimizely-x' ); ?></a>
+	<p><?php esc_html_e( 'Status', 'optimizely-x' ); ?>: <b id="optimizely_experiment_status_text"><?php echo esc_html( $status ); ?></b></p>
+	<p><?php esc_html_e( 'Experiment ID', 'optimizely-x' ); ?>: <b id="optimizely_experiment_id"><?php echo esc_html( $experiment_id ); ?></b></p>
 </div>

@@ -1,21 +1,26 @@
 <?php
-
 /**
- * @link              https://www.optimizely.com
- * @since             1.0.0
- * @package           Optimizely_X
+ * Optimizely X
+ *
+ * @link https://www.optimizely.com
+ *
+ * @author Optimizely
+ * @copyright 2017 Optimizely
+ * @license GPL-2.0+
+ * @package Optimizely_X
+ * @since 1.0.0
  *
  * @wordpress-plugin
- * Plugin Name:       Optimizely X
- * Plugin URI:        ttp://wordpress.org/extend/plugins/optimizely-x/
- * Description:       Simple, fast, and powerful.  <a href="http://www.optimizely.com">Optimizely</a> is a dramatically easier way for you to improve your website through A/B testing. Create an experiment in minutes with our easy-to-use visual interface with absolutely no coding or engineering required. Convert your website visitors into customers and earn more revenue today! To get started: 1) Click the "Activate" link to the left of this description, 2) Sign up for an <a href="http://www.optimizely.com">Optimizely account</a>, and 3) Create an API Token here: <a href="https://www.optimizely.com/tokens">API Tokens</a>, and enter your API token in the Configuration Tab of the Plugin, then select a project to start testing!
- * Version:           1.0.0
- * Author:            Optimizely
- * Author URI:        https://www.optimizely.com
- * License:           GPL-2.0+
- * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
- * Text Domain:       optimizely_x
- * Domain Path:       /languages
+ * Plugin Name: Optimizely X
+ * Plugin URI: https://wordpress.org/plugins/optimizely-x/
+ * Description: Simple, fast, and powerful. <a href="https://www.optimizely.com">Optimizely</a> is a dramatically easier way for you to improve your website through A/B testing. Create an experiment in minutes with our easy-to-use visual interface with absolutely no coding or engineering required. Convert your website visitors into customers and earn more revenue today! To get started: 1) Click the "Activate" link to the left of this description, 2) Sign up for an <a href="https://www.optimizely.com">Optimizely account</a>, and 3) Create an API Token here: <a href="https://www.optimizely.com/tokens">API Tokens</a>, and enter your API token in the Configuration Tab of the Plugin, then select a project to start testing!
+ * Version: 1.0.0
+ * Author: Optimizely
+ * Author URI: https://www.optimizely.com
+ * License: GPL-2.0+
+ * License URI: http://www.gnu.org/licenses/gpl-2.0.txt
+ * Text Domain: optimizely-x
+ * Domain Path: /languages
  */
 
 // If this file is called directly, abort.
@@ -24,45 +29,58 @@ if ( ! defined( 'WPINC' ) ) {
 }
 
 /**
- * The code that runs during plugin activation.
- * This action is documented in includes/class-optimizely-x-activator.php
- */
-function activate_plugin_name() {
-	require_once plugin_dir_path( __FILE__ ) . 'includes/class-optimizely-x-activator.php';
-	Optimizely_X_Activator::activate();
-}
-
-/**
- * The code that runs during plugin deactivation.
- * This action is documented in includes/class-optimizely-x-deactivator.php
- */
-function deactivate_plugin_name() {
-	require_once plugin_dir_path( __FILE__ ) . 'includes/class-optimizely-x-deactivator.php';
-	Optimizely_X_Deactivator::deactivate();
-}
-
-register_activation_hook( __FILE__, 'activate_plugin_name' );
-register_deactivation_hook( __FILE__, 'deactivate_plugin_name' );
-
-/**
- * The core plugin class that is used to define internationalization,
- * admin-specific hooks, and public-facing site hooks.
- */
-require plugin_dir_path( __FILE__ ) . 'includes/class-optimizely-x.php';
-
-/**
- * Begins execution of the plugin.
+ * The base directory for all Optimizely X plugin files.
  *
- * Since everything within the plugin is registered via hooks,
- * then kicking off the plugin from this point in the file does
- * not affect the page life cycle.
- *
- * @since    1.0.0
+ * @since 1.0.0
+ * @var string
  */
-function run_plugin_name() {
+define( 'OPTIMIZELY_X_BASE_DIR', __DIR__ );
 
-	$plugin = new Optimizely_X();
-	$plugin->run();
+/**
+ * The base URL for all Optimizely X plugin files.
+ *
+ * @since 1.0.0
+ * @var string
+ */
+define( 'OPTIMIZELY_X_BASE_URL', untrailingslashit( plugin_dir_url( __FILE__ ) ) );
 
+/**
+ * An autoloader callback for loading classes in the Optimizely_X namespace.
+ *
+ * @param string $class The class name that was referenced.
+ *
+ * @private
+ */
+function optimizely_x_load_class( $class ) {
+
+	// Set project-specific namespace prefix.
+	$prefix = 'Optimizely_X\\';
+
+	// Determine if the requested class is in this project's namespace.
+	$class = ltrim( $class, '\\' );
+	if ( strpos( $class, $prefix ) !== 0 ) {
+		return;
+	}
+
+	// Convert class name to WordPress standard conventions.
+	$class = strtolower(
+		str_replace( array( $prefix, '_' ), array( '', '-' ), $class )
+	);
+
+	// Treat the class name as a path and split into parts.
+	$dirs = explode( '\\', $class );
+
+	// Remove the name of the class from the directory path.
+	$class = array_pop( $dirs );
+
+	// Include the class file.
+	require_once OPTIMIZELY_X_BASE_DIR
+		. rtrim( '/includes/' . implode( '/', $dirs ), '/' )
+		. '/class-' . $class . '.php';
 }
-run_plugin_name();
+
+// Initialize the autoloader.
+spl_autoload_register( 'optimizely_x_load_class' );
+
+// Bootstrap the plugin.
+Optimizely_X\Core::instance();

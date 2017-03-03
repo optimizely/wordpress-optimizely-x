@@ -1,6 +1,19 @@
 <?php
+/**
+ * Optimizely X: API class
+ *
+ * @package Optimizely_X
+ * @since 1.0.0
+ */
 
-class Optimizely_X_Api {
+namespace Optimizely_X;
+
+/**
+ * A class to handle communication with the Optimizely REST API.
+ *
+ * @since 1.0.0
+ */
+class API {
 
 	/**
 	 * Initialize the class and set its properties.
@@ -18,7 +31,7 @@ class Optimizely_X_Api {
 		$result['error'] = array();
 		if($token == '') {
 			$result['status'] = "NOTOKEN";
-			$result['error'][] = "You have not filled in a token.";
+			$result['error'][] = esc_attr__( 'You have not filled in a token.', 'optimizely-x' );
 			$result['code'] = 401;
 			return $result;
 	  }

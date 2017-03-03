@@ -1,38 +1,114 @@
 <?php
-
 /**
- * The admin-specific functionality of the plugin.
+ * Optimizely X: AJAX class
  *
- * @link       https://www.optimizely.com
- * @since      1.0.0
- *
- * @package    Optimizely_X
- * @subpackage Optimizely_X/admin
+ * @package Optimizely_X
+ * @since 1.0.0
  */
 
-/**
- * The admin-specific functionality of the plugin.
- *
- * Defines the plugin name, version, and two examples hooks for how to
- * enqueue the admin-specific stylesheet and JavaScript.
- *
- * @package    Optimizely_X
- * @subpackage Optimizely_X/admin
- * @author     Your Name <email@example.com>
- */
-class Optimizely_X_Ajax {
+namespace Optimizely_X;
 
+/**
+ * Defines AJAX endpoints that communicate with the API.
+ *
+ * @since 1.0.0
+ */
+class AJAX {
+
+	/**
+	 * Singleton instance.
+	 *
+	 * @since 1.0.0
+	 * @access private
+	 * @var AJAX
+	 */
+	private static $instance;
+
+	/**
+	 * An instance of the Optimizely API object, used to communicate with the API.
+	 *
+	 * @since 1.0.0
+	 * @access private
+	 * @var API
+	 */
 	private $api;
 
 	/**
-	 * Initialize the class and set its properties.
+	 * Gets the singleton instance.
 	 *
-	 * @since    1.0.0
-	 * @param      string    $token       The Optimizely API Personal Token
+	 * @since 1.0.0
+	 * @access public
+	 *
+	 * @return AJAX
 	 */
-	public function __construct( ) {
-		$this->api = new Optimizely_X_Api();
+	public static function instance() {
+
+		// Initialize the instance, if necessary.
+		if ( ! isset( self::$instance ) ) {
+			self::$instance = new AJAX;
+			self::$instance->setup();
+		}
+
+		return self::$instance;
 	}
+
+	/**
+	 * Empty clone method, forcing the use of the instance() method.
+	 *
+	 * @see self::instance()
+	 *
+	 * @access private
+	 */
+	private function __clone() {
+	}
+
+	/**
+	 * Empty constructor, forcing the use of the instance() method.
+	 *
+	 * @see self::instance()
+	 *
+	 * @access private
+	 */
+	private function __construct() {
+	}
+
+	/**
+	 * Empty wakeup method, forcing the use of the instance() method.
+	 *
+	 * @see self::instance()
+	 *
+	 * @access private
+	 */
+	private function __wakeup() {
+	}
+
+	/**
+	 * Registers action and filter hooks and initializes the API object.
+	 *
+	 * @since 1.0.0
+	 * @access private
+	 */
+	private function setup() {
+
+		// Initialize the API.
+		$this->api = new API;
+
+		// Register action hooks.
+		add_action(
+			'wp_ajax_optimizely_x_change_status',
+			array( $this, 'change_status' )
+		);
+		add_action(
+			'wp_ajax_optimizely_x_create_experiment',
+			array( $this, 'create_experiment' )
+		);
+		add_action(
+			'wp_ajax_optimizely_x_get_projects',
+			array( $this, 'get_projects' )
+		);
+	}
+
+	// TODO: Refactor from here.
 
 	function get_projects() {
 		$result = array();
@@ -159,9 +235,21 @@ class Optimizely_X_Ajax {
 		$post_id = $_POST['entitiy_id'];
 		$post = get_post( $post_id  );
 
-		$experiment['name'] = 'Wordpress [' . $post_id . ']: ' . $post->post_title;
-		$targeting_page['name'] = 'Wordpress [' . $post_id . ']: ' . $post->post_title . ' targeting page';
-		$event_page['name'] = 'Wordpress [' . $post_id . ']: ' . $post->post_title . ' event page';
+		$experiment['name'] = sprintf(
+			esc_html_x( 'WordPress [%1$d]: %2$s', 'First parameter is the post ID, second is the post title.', 'optimizely-x' ),
+			absint( $post_id ),
+			esc_html( $post->post_title )
+		);
+		$targeting_page['name'] = sprintf(
+			esc_html_x( 'WordPress [%1$d]: %2$s targeting page', 'First parameter is the post ID, second is the post title.', 'optimizely-x' ),
+			absint( $post_id ),
+			esc_html( $post->post_title )
+		);
+		$event_page['name'] = sprintf(
+			esc_html_x( 'WordPress [%1$d]: %2$s event page', 'First parameter is the post ID, second is the post title.', 'optimizely-x' ),
+			absint( $post_id ),
+			esc_html( $post->post_title )
+		);
 
 		$activation_mode = get_option('optimizely_activation_mode');
 		if($activation_mode == 'conditional') {
@@ -191,13 +279,13 @@ class Optimizely_X_Ajax {
 
 		$targeting_page_response = $this->api->request('POST', 'https://api.optimizely.com/v2/pages', $targeting_page, true);
 		if($targeting_page_response['status'] != 'SUCCESS'){
-			$targeting_page_response['error'][] = "An error occured during the creation of a targeting page.";
+			$targeting_page_response['error'][] = esc_attr__( 'An error occurred during the creation of a targeting page.', 'optimizely-x' );
 			die(json_encode($targeting_page_response));
 		}
 
 		$event_page_response = $this->api->request('POST', 'https://api.optimizely.com/v2/pages', $event_page, true);
 		if($event_page_response['status'] != 'SUCCESS'){
-			$event_page_response['error'][] = "An error occured during the creation of a event page.";
+			$event_page_response['error'][] = esc_attr__( 'An error occurred during the creation of an event page.', 'optimizely-x' );
 			die(json_encode($event_page_response));
 		}
 
@@ -216,7 +304,7 @@ class Optimizely_X_Ajax {
 
 		$experiment_response = $this->api->request('POST', 'https://api.optimizely.com/v2/experiments', $experiment, true);
 		if($experiment_response['status'] != 'SUCCESS'){
-			$result['error'][] = "An error occured during the creation of the experiment.";
+			$result['error'][] = esc_attr__( 'An error occurred during the creation of the experiment.', 'optimizely-x' );
 			die(json_encode($experiment_response));
 		}
 

@@ -25,8 +25,12 @@
     			<div class="ui-widget">
     		    <div class="ui-state-error ui-corner-all" style="padding: 0 .7em;">
     		        <p>
-    							<span class="ui-icon ui-icon-alert" style="float: left; margin-right: .3em;"></span>
-    		          <strong>Alert:</strong> A request with the Personal Token that you have previously saved failed. Either submit a new token or click the retry button below.
+    					<span class="ui-icon ui-icon-alert" style="float: left; margin-right: .3em;"></span>
+			            <?php printf(
+			                esc_html__( '%1$sAlert:%2$s: A request with the Personal Token that you have previously saved failed. Either submit a new token or click the retry button below.', 'optimizely-x' ),
+				            '<strong>',
+				            '</strong>'
+			            ); ?>
     		        </p>
     		    </div>
     			</div>
@@ -42,16 +46,15 @@
   	</div>
 
   	<div class="loading">
-  		<p>Loading your configuration ...</p>
+  		<p><?php esc_html_e( 'Loading your configuration ...', 'optimizely-x' ); ?></p>
   		<img src="<?php echo $loading_image ?>" />
     </div>
   </div>
 
   <div class="authenticated hidden">
     <ul class="tabs-header" id="tabs-header">
-      <!--<li><a href="#tabs-1"><?php echo esc_html_e( 'Results', 'optimizely' ) ?></a></li>-->
-      <li><a href="#tabs-2"><?php echo esc_html_e( 'Configuration', 'optimizely' ) ?></a></li>
-      <li><a href="#tabs-3"><?php echo esc_html_e( 'Re-Authenticate', 'optimizely' ) ?></a></li>
+      <li><a href="#tabs-2"><?php esc_html_e( 'Configuration', 'optimizely-x' ); ?></a></li>
+      <li><a href="#tabs-3"><?php esc_html_e( 'Re-Authenticate', 'optimizely-x' ); ?></a></li>
     </ul>
 
     <!-- <div id="tabs-1" class="tabs">
@@ -88,7 +91,7 @@
           <div id="optimizely_number" class='section'>
             <?php include( dirname( __FILE__ ) . '/sections/number.php' ); ?>
           </div>
-          <p class="submit"><input type="submit" name="submit" value="<?php esc_html_e( 'Submit &raquo;', 'optimizely' ); ?>" class="button-primary" /></p>
+          <p class="submit"><input type="submit" name="submit" value="<?php esc_html_e( 'Submit', 'optimizely-x' ); ?>  &raquo;" class="button-primary" /></p>
         </form>
       </div>
     </div>

@@ -30,7 +30,7 @@
 		$('.optimizely_running_experiment').addClass('hidden');
 
 		var data = {
-			'action': 'change_status',
+			'action': 'optimizely_x_change_status',
 			'status': window.optimizelyIntegration.status,
 			'entitiy_id': window.optimizelyIntegration.entitiy_id
 		};
@@ -85,7 +85,7 @@
 		$(".optimizely_new_experiment").addClass('hidden');
 
 		var data = {
-	  	'action': 'create_experiment',
+	  	'action': 'optimizely_x_create_experiment',
 	  	'variations': JSON.stringify(variations),
 			'entitiy_id': window.optimizelyIntegration.entitiy_id
 		};
