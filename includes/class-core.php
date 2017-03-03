@@ -101,30 +101,6 @@ class Core {
 	}
 
 	/**
-	 * Register the ajax functions for the admin area.
-	 *
-	 * @since 1.0.0
-	 * @access private
-	 */
-	private function define_ajax_actions() {
-		$this->loader->add_action(
-			'wp_ajax_get_projects',
-			'Optimizely_X\\AJAX',
-			'get_projects'
-		);
-		$this->loader->add_action(
-			'wp_ajax_create_experiment',
-			'Optimizely_X\\AJAX',
-			'create_experiment'
-		);
-		$this->loader->add_action(
-			'wp_ajax_change_status',
-			'Optimizely_X\\AJAX',
-			'change_status'
-		);
-	}
-
-	/**
 	 * Register all of the hooks related to the public-facing functionality of the
 	 * plugin.
 	 *
@@ -167,12 +143,12 @@ class Core {
 	 */
 	private function setup() {
 		Admin::instance();
+		AJAX::instance();
 		I18N::instance();
 
 		// TODO: Refactor to use singleton instance pattern.
 		$this->loader = new Loader;
 		$this->define_public_hooks();
-		$this->define_ajax_actions();
 		$this->loader->run();
 	}
 }
