@@ -33,16 +33,6 @@ class Core {
 	const VERSION = '1.0.0';
 
 	/**
-	 * The loader that's responsible for maintaining and registering all hooks that
-	 * power the plugin.
-	 *
-	 * @since 1.0.0
-	 * @access protected
-	 * @var Loader
-	 */
-	protected $loader;
-
-	/**
 	 * Singleton instance.
 	 *
 	 * @since 1.0.0
@@ -101,11 +91,7 @@ class Core {
 	}
 
 	/**
-	 * Define the core functionality of the plugin.
-	 *
-	 * Set the plugin name and the plugin version that can be used throughout the
-	 * plugin. Load the dependencies, define the locale, and set the hooks for the
-	 * admin area and the public-facing side of the site.
+	 * Initialize the objects that control the plugin's functionality.
 	 *
 	 * @since 1.0.0
 	 * @access private
@@ -115,9 +101,5 @@ class Core {
 		AJAX::instance();
 		Frontend::instance();
 		I18N::instance();
-
-		// TODO: Refactor to use singleton instance pattern.
-		$this->loader = new Loader;
-		$this->loader->run();
 	}
 }
