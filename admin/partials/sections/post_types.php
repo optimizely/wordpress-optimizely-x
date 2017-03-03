@@ -1,5 +1,5 @@
-<h3><?php esc_html_e( 'Post Types', 'optimizely' ); ?></h3>
-<p><?php esc_html_e( 'Please choose the post types you would like to conduct A/B testing on', 'optimizely' ); ?></p>
+<h3><?php esc_html_e( 'Post Types', 'optimizely-x' ); ?></h3>
+<p><?php esc_html_e( 'Please choose the post types you would like to conduct A/B testing on', 'optimizely-x' ); ?></p>
 <?php
 	$args = array(
 		'show_ui' => true

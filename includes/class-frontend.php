@@ -91,11 +91,17 @@ class Frontend {
 	 * Add the meta box for title variations.
 	 */
 	function optimizely_title_variations_add() {
-		// Only add the module if the current post type is one the user selected in the admin tab
+		// Only add the module if the current post type is one the user selected in the admin tab.
 		if ( $this->optimizely_is_post_type_enabled( get_post_type() ) ) {
-		  add_meta_box( 'optimizely-headlines', 'A/B Test Headlines', array(&$this, 'optimizely_title_variations_render'), get_post_type(), 'side', 'high' );
+			add_meta_box(
+				'optimizely-headlines',
+				esc_attr__( 'A/B Test Headlines', 'optimizely-x' ),
+				array( &$this, 'optimizely_title_variations_render' ),
+				get_post_type(),
+				'side',
+				'high'
+			);
 		}
-
 	}
 
 	function optimizely_title_variations_render( $post ) {

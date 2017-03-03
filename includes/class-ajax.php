@@ -152,9 +152,21 @@ class AJAX {
 		$post_id = $_POST['entitiy_id'];
 		$post = get_post( $post_id  );
 
-		$experiment['name'] = 'Wordpress [' . $post_id . ']: ' . $post->post_title;
-		$targeting_page['name'] = 'Wordpress [' . $post_id . ']: ' . $post->post_title . ' targeting page';
-		$event_page['name'] = 'Wordpress [' . $post_id . ']: ' . $post->post_title . ' event page';
+		$experiment['name'] = sprintf(
+			esc_html_x( 'WordPress [%1$d]: %2$s', 'First parameter is the post ID, second is the post title.', 'optimizely-x' ),
+			absint( $post_id ),
+			esc_html( $post->post_title )
+		);
+		$targeting_page['name'] = sprintf(
+			esc_html_x( 'WordPress [%1$d]: %2$s targeting page', 'First parameter is the post ID, second is the post title.', 'optimizely-x' ),
+			absint( $post_id ),
+			esc_html( $post->post_title )
+		);
+		$event_page['name'] = sprintf(
+			esc_html_x( 'WordPress [%1$d]: %2$s event page', 'First parameter is the post ID, second is the post title.', 'optimizely-x' ),
+			absint( $post_id ),
+			esc_html( $post->post_title )
+		);
 
 		$activation_mode = get_option('optimizely_activation_mode');
 		if($activation_mode == 'conditional') {
@@ -184,13 +196,13 @@ class AJAX {
 
 		$targeting_page_response = $this->api->request('POST', 'https://api.optimizely.com/v2/pages', $targeting_page, true);
 		if($targeting_page_response['status'] != 'SUCCESS'){
-			$targeting_page_response['error'][] = "An error occured during the creation of a targeting page.";
+			$targeting_page_response['error'][] = esc_attr__( 'An error occurred during the creation of a targeting page.', 'optimizely-x' );
 			die(json_encode($targeting_page_response));
 		}
 
 		$event_page_response = $this->api->request('POST', 'https://api.optimizely.com/v2/pages', $event_page, true);
 		if($event_page_response['status'] != 'SUCCESS'){
-			$event_page_response['error'][] = "An error occured during the creation of a event page.";
+			$event_page_response['error'][] = esc_attr__( 'An error occurred during the creation of an event page.', 'optimizely-x' );
 			die(json_encode($event_page_response));
 		}
 
@@ -209,7 +221,7 @@ class AJAX {
 
 		$experiment_response = $this->api->request('POST', 'https://api.optimizely.com/v2/experiments', $experiment, true);
 		if($experiment_response['status'] != 'SUCCESS'){
-			$result['error'][] = "An error occured during the creation of the experiment.";
+			$result['error'][] = esc_attr__( 'An error occurred during the creation of the experiment.', 'optimizely-x' );
 			die(json_encode($experiment_response));
 		}
 

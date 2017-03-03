@@ -31,7 +31,7 @@ class API {
 		$result['error'] = array();
 		if($token == '') {
 			$result['status'] = "NOTOKEN";
-			$result['error'][] = "You have not filled in a token.";
+			$result['error'][] = esc_attr__( 'You have not filled in a token.', 'optimizely-x' );
 			$result['code'] = 401;
 			return $result;
 	  }

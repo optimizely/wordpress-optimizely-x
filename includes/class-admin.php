@@ -63,32 +63,35 @@ class Admin {
 
 	}
 
-  /**
-   * Display admin notices for the plugin.
-   */
-  function optimizely_admin_notices() {
-  	if ( ! get_option( 'optimizely_token' ) && ! isset( $_POST['submit'] ) ):
-  		?>
-  		<div id="optimizely-warning" class="updated fade">
-  			<p><strong><?php echo sprintf(
-  				'%s <a href="https://app.optimizely.com/tokens" target="_blank">%s</a> %s <a href="admin.php?page=optimizely-config#tabs-2">%s</a>.',
-  				esc_html__( 'Optimizely is almost ready. You must first add your', 'optimizely' ),
-  				esc_html__( 'API Token', 'optimizely' ),
-  				esc_html__( 'in the', 'optimizely' ),
-  				esc_html__( 'configuration tab', 'optimizely' )
-  			);?></strong></p>
-  		</div>
-  		<?php
-  	endif;
-  	if ( get_option( 'optimizely_token' ) && ! get_option( 'optimizely_project_id' ) && ! isset( $_POST['submit'] ) ):
-  		?>
-  		<div id="optimizely-warning" class="updated fade">
-  			<p><strong><?php esc_html_e( 'Optimizely is almost ready. You must choose a project', 'optimizely' ) ?>.</strong>
-  			</p>
-  		</div>
-  		<?php
-  	endif;
-  }
+	/**
+	 * Display admin notices for the plugin.
+	 *
+	 * @todo Move this to a partial.
+	 */
+	function optimizely_admin_notices() {
+		if ( ! get_option( 'optimizely_token' ) && ! isset( $_POST['submit'] ) ) :
+			?>
+			<div id="optimizely-warning" class="updated fade">
+				<p><strong><?php printf(
+					esc_html__( 'Optimizely is almost ready. You must first add your %1$sAPI Token%2$s in the %3$sconfiguration tab%4$s.', 'optimizely-x' ),
+					'<a href="https://app.optimizely.com/tokens" target="_blank">',
+					'</a>',
+					'<a href="' . esc_url( menu_page_url( 'optimizely-config', false ) . '#tabs-2' ) . '">',
+					'</a>'
+				); ?></strong></p>
+			</div>
+			<?php
+		endif;
+		if ( get_option( 'optimizely_token' ) && ! get_option( 'optimizely_project_id' ) && ! isset( $_POST['submit'] ) ) :
+			?>
+			<div id="optimizely-warning" class="updated fade">
+				<p>
+					<strong><?php esc_html_e( 'Optimizely is almost ready. You must choose a project.', 'optimizely-x' ); ?></strong>
+				</p>
+			</div>
+			<?php
+		endif;
+	}
 
 	/**
 	 * Register the stylesheets for the admin area.
@@ -135,7 +138,7 @@ class Admin {
 	public function optimizely_store_post_data() {
 
 		if ( ! current_user_can( apply_filters( 'optimizely_admin_capability', 'manage_options' ) ) ) {
-			die( __( 'Cheatin&#8217; uh?', 'optimizely' ) );
+			die( esc_html__( 'Cheatin&#8217; uh?', 'optimizely-x' ) );
 		}
 
 		// Check the nonce
@@ -220,7 +223,7 @@ class Admin {
   		}
     }
 		?>
-		<div id="message" class="updated fade"><p><strong><?php esc_html_e( 'Settings saved', 'optimizely' ) ?>.</strong></p></div>
+		<div id="message" class="updated fade"><p><strong><?php esc_html_e( 'Settings saved.', 'optimizely-x' ); ?></strong></p></div>
 		<?php
 
 	}
@@ -248,18 +251,19 @@ class Admin {
 
 	/**
 	 * Add Optimizely to the admin menu.
+	 *
+	 * @since 1.0.0
+	 * @access public
 	 */
-	function optimizely_admin_menu() {
-
+	public function optimizely_admin_menu() {
 		add_menu_page(
-		  __( 'Optimizely', 'optimizely' ),
-			__( 'Optimizely', 'optimizely' ),
+			__( 'Optimizely', 'optimizely-x' ),
+			__( 'Optimizely', 'optimizely-x' ),
+			// TODO: Move to central filter class and add appropriate docblock.
 			apply_filters( 'optimizely_admin_capability', 'manage_options' ),
 			'optimizely-config',
-			array(&$this, 'optimizely_configuration'),
-			plugin_dir_url( __FILE__ ) . 'images/optimizely-icon.png'
+			array( &$this, 'optimizely_configuration' ),
+			plugin_dir_url( dirname( __FILE__ ) ) . 'admin/images/optimizely-icon.png'
 		);
 	}
-
-
 }

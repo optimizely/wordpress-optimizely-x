@@ -9,7 +9,7 @@
 namespace Optimizely_X;
 
 /**
- * Define the internationalization functionality.
+ * Defines the internationalization functionality.
  *
  * Loads and defines the internationalization files for this plugin so that it is
  * ready for translation.
@@ -24,11 +24,11 @@ class I18N {
 	 * @since 1.0.0
 	 * @access public
 	 */
-	public function load_plugin_textdomain() {
+	public static function load_plugin_textdomain() {
 		load_plugin_textdomain(
 			'optimizely-x',
 			false,
-			OPTIMIZELY_X_BASE_DIR . '/languages/'
+			OPTIMIZELY_X_BASE_DIR . '/languages'
 		);
 	}
 }

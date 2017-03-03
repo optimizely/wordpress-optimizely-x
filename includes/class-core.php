@@ -195,10 +195,9 @@ class Core {
 	 * @access private
 	 */
 	private function set_locale() {
-		$this->loader->add_action(
+		add_action(
 			'plugins_loaded',
-			'Optimizely_X\\I18N',
-			'load_plugin_textdomain'
+			array( 'Optimizely_X\\I18N', 'load_plugin_textdomain' )
 		);
 	}
 
