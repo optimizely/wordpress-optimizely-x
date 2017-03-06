@@ -33,16 +33,6 @@ class Core {
 	const VERSION = '1.0.0';
 
 	/**
-	 * The loader that's responsible for maintaining and registering all hooks that
-	 * power the plugin.
-	 *
-	 * @since 1.0.0
-	 * @access protected
-	 * @var Loader
-	 */
-	protected $loader;
-
-	/**
 	 * Singleton instance.
 	 *
 	 * @since 1.0.0
@@ -101,122 +91,15 @@ class Core {
 	}
 
 	/**
-	 * Register all of the hooks related to the admin area functionality of the
-	 * plugin.
-	 *
-	 * @since 1.0.0
-	 * @access private
-	 */
-	private function define_admin_hooks() {
-		$this->loader->add_action(
-			'admin_menu',
-			'Optimizely_X\\Admin',
-			'optimizely_admin_menu'
-		);
-		$this->loader->add_action(
-			'admin_notices',
-			'Optimizely_X\\Admin',
-			'optimizely_admin_notices'
-		);
-		$this->loader->add_action(
-			'admin_enqueue_scripts',
-			'Optimizely_X\\Admin',
-			'enqueue_styles'
-		);
-		$this->loader->add_action(
-			'admin_enqueue_scripts',
-			'Optimizely_X\\Admin',
-			'enqueue_scripts'
-		);
-	}
-
-	/**
-	 * Register the ajax functions for the admin area.
-	 *
-	 * @since 1.0.0
-	 * @access private
-	 */
-	private function define_ajax_actions() {
-		$this->loader->add_action(
-			'wp_ajax_get_projects',
-			'Optimizely_X\\AJAX',
-			'get_projects'
-		);
-		$this->loader->add_action(
-			'wp_ajax_create_experiment',
-			'Optimizely_X\\AJAX',
-			'create_experiment'
-		);
-		$this->loader->add_action(
-			'wp_ajax_change_status',
-			'Optimizely_X\\AJAX',
-			'change_status'
-		);
-	}
-
-	/**
-	 * Register all of the hooks related to the public-facing functionality of the
-	 * plugin.
-	 *
-	 * @since 1.0.0
-	 * @access private
-	 */
-	private function define_public_hooks() {
-		$this->loader->add_action(
-			'wp_head',
-			'Optimizely_X\\Frontend',
-			'optimizely_add_script',
-			- 1000
-		);
-		$this->loader->add_action(
-			'add_meta_boxes',
-			'Optimizely_X\\Frontend',
-			'optimizely_title_variations_add'
-		);
-		$this->loader->add_action(
-			'wp_enqueue_scripts',
-			'Optimizely_X\\Frontend',
-			'enqueue_styles'
-		);
-		$this->loader->add_action(
-			'wp_enqueue_scripts',
-			'Optimizely_X\\Frontend',
-			'enqueue_scripts'
-		);
-	}
-
-	/**
-	 * Define the locale for this plugin for internationalization.
-	 *
-	 * Uses the I18N class in order to set the domain and to register the hook with
-	 * WordPress.
-	 *
-	 * @since 1.0.0
-	 * @access private
-	 */
-	private function set_locale() {
-		add_action(
-			'plugins_loaded',
-			array( 'Optimizely_X\\I18N', 'load_plugin_textdomain' )
-		);
-	}
-
-	/**
-	 * Define the core functionality of the plugin.
-	 *
-	 * Set the plugin name and the plugin version that can be used throughout the
-	 * plugin. Load the dependencies, define the locale, and set the hooks for the
-	 * admin area and the public-facing side of the site.
+	 * Initialize the objects that control the plugin's functionality.
 	 *
 	 * @since 1.0.0
 	 * @access private
 	 */
 	private function setup() {
-		$this->loader = new Loader;
-		$this->set_locale();
-		$this->define_admin_hooks();
-		$this->define_public_hooks();
-		$this->define_ajax_actions();
-		$this->loader->run();
+		Admin::instance();
+		AJAX::instance();
+		Frontend::instance();
+		I18N::instance();
 	}
 }

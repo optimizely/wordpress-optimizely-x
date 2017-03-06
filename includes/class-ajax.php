@@ -15,17 +15,100 @@ namespace Optimizely_X;
  */
 class AJAX {
 
+	/**
+	 * Singleton instance.
+	 *
+	 * @since 1.0.0
+	 * @access private
+	 * @var AJAX
+	 */
+	private static $instance;
+
+	/**
+	 * An instance of the Optimizely API object, used to communicate with the API.
+	 *
+	 * @since 1.0.0
+	 * @access private
+	 * @var API
+	 */
 	private $api;
 
 	/**
-	 * Initialize the class and set its properties.
+	 * Gets the singleton instance.
 	 *
-	 * @since    1.0.0
-	 * @param      string    $token       The Optimizely API Personal Token
+	 * @since 1.0.0
+	 * @access public
+	 *
+	 * @return AJAX
 	 */
-	public function __construct( ) {
-		$this->api = new API;
+	public static function instance() {
+
+		// Initialize the instance, if necessary.
+		if ( ! isset( self::$instance ) ) {
+			self::$instance = new AJAX;
+			self::$instance->setup();
+		}
+
+		return self::$instance;
 	}
+
+	/**
+	 * Empty clone method, forcing the use of the instance() method.
+	 *
+	 * @see self::instance()
+	 *
+	 * @access private
+	 */
+	private function __clone() {
+	}
+
+	/**
+	 * Empty constructor, forcing the use of the instance() method.
+	 *
+	 * @see self::instance()
+	 *
+	 * @access private
+	 */
+	private function __construct() {
+	}
+
+	/**
+	 * Empty wakeup method, forcing the use of the instance() method.
+	 *
+	 * @see self::instance()
+	 *
+	 * @access private
+	 */
+	private function __wakeup() {
+	}
+
+	/**
+	 * Registers action and filter hooks and initializes the API object.
+	 *
+	 * @since 1.0.0
+	 * @access private
+	 */
+	private function setup() {
+
+		// Initialize the API.
+		$this->api = new API;
+
+		// Register action hooks.
+		add_action(
+			'wp_ajax_optimizely_x_change_status',
+			array( $this, 'change_status' )
+		);
+		add_action(
+			'wp_ajax_optimizely_x_create_experiment',
+			array( $this, 'create_experiment' )
+		);
+		add_action(
+			'wp_ajax_optimizely_x_get_projects',
+			array( $this, 'get_projects' )
+		);
+	}
+
+	// TODO: Refactor from here.
 
 	function get_projects() {
 		$result = array();

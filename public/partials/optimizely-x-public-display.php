@@ -17,6 +17,8 @@ function optimizely_meta_key( $i ) {
   return 'post_title_' . absint( $i );
 }
 
+$loading_image = OPTIMIZELY_X_BASE_URL . '/public/images/ajax-loader.gif';
+
 echo '<div class="optimizely_loading hidden">';
 require_once OPTIMIZELY_X_BASE_DIR . '/public/partials/states/loading.php';
 echo '</div>';
