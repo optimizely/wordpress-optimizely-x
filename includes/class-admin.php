@@ -8,25 +8,38 @@
 
 namespace Optimizely_X;
 
-// TODO: Convert these to class constants.
-define( 'OPTIMIZELY_DEFAULT_VARIATION_TEMPLATE', 'var utils = window[\'optimizely\'].get(\'utils\');
-utils.waitForElement(\'.post-$POST_ID h1\').then(function() {
-    var element = document.querySelector(\'.post-$POST_ID h1\');
-    element.innerHTML = \'$NEW_TITLE\';
-});'
-);
-define( 'OPTIMIZELY_DEFAULT_CONDITIONAL_TEMPLATE', 'function pollingFn() {
-    return document.querySelectorAll(\'.post-$POST_ID\').length > 0;
-}' );
-define( 'OPTIMIZELY_NUM_VARIATIONS', 2 );
-define( 'OPTIMIZELY_NONCE', 'optimizely-update-code' );
-
 /**
- * The admin-specific functionality of the plugin.
+ * Handles wp-admin functionality for the Optimizely X plugin.
  *
  * @since 1.0.0
  */
 class Admin {
+
+	/**
+	 * The default conditional template JavaScript.
+	 *
+	 * @since 1.0.0
+	 * @var string
+	 */
+	const DEFAULT_CONDITIONAL_TEMPLATE = <<<JAVASCRIPT
+function pollingFn() {
+    return document.querySelectorAll( '.post-\$POST_ID' ).length > 0;
+}
+JAVASCRIPT;
+
+	/**
+	 * The default variation template JavaScript.
+	 *
+	 * @since 1.0.0
+	 * @var string
+	 */
+	const DEFAULT_VARIATION_TEMPLATE = <<<JAVASCRIPT
+var utils = window['optimizely'].get('utils');
+utils.waitForElement( '.post-\$POST_ID h1' ).then( function () {
+    var element = document.querySelector( '.post-\$POST_ID h1' );
+    element.innerHTML = '\$NEW_TITLE';
+} );
+JAVASCRIPT;
 
 	/**
 	 * Singleton instance.
@@ -36,6 +49,21 @@ class Admin {
 	 * @var Admin
 	 */
 	private static $instance;
+
+	/**
+	 * Determine whether Optimizely settings are fully initialized.
+	 *
+	 * If settings are fully initialized, then experiments can be created.
+	 *
+	 * @since 1.0.0
+	 * @access public
+	 * @return bool True if all settings are set, false if not.
+	 */
+	public static function is_initialized() {
+		return ( false !== get_option( 'optimizely_token' )
+			&& 0 !== absint( get_option( 'optimizely_project_id' ) )
+		);
+	}
 
 	/**
 	 * Gets the singleton instance.
@@ -57,6 +85,23 @@ class Admin {
 	}
 
 	/**
+	 * Returns an array of supported post type objects, keyed by name.
+	 *
+	 * @since 1.0.0
+	 * @access public
+	 * @return array
+	 */
+	public static function supported_post_types() {
+
+		// Get a list of public post types minus pages and attachments.
+		$post_types = get_post_types( array( 'show_ui' => true ), 'objects' );
+		unset( $post_types['page'] );
+		unset( $post_types['attachment'] );
+
+		return $post_types;
+	}
+
+	/**
 	 * Add Optimizely to the admin menu.
 	 *
 	 * @since 1.0.0
@@ -66,10 +111,9 @@ class Admin {
 		add_menu_page(
 			__( 'Optimizely', 'optimizely-x' ),
 			__( 'Optimizely', 'optimizely-x' ),
-			// TODO: Move to central filter class and add appropriate docblock.
-			apply_filters( 'optimizely_admin_capability', 'manage_options' ),
+			Filters::admin_capability(),
 			'optimizely-config',
-			array( $this, 'optimizely_configuration' ),
+			array( $this, 'render_page_config' ),
 			OPTIMIZELY_X_BASE_URL . '/admin/images/optimizely-icon.png'
 		);
 	}
@@ -99,35 +143,103 @@ class Admin {
 	}
 
 	/**
-	 * Display admin notices for the plugin.
+	 * Registers settings sections and settings fields for use on the options page.
 	 *
-	 * @todo Move this to a partial.
+	 * @since 1.0.0
+	 * @access public
+	 */
+	public function add_settings() {
+
+		// Define fields to register.
+		$fields = array(
+			'optimizely_token' => array(
+				'label' => esc_html__( 'Personal Token', 'optimizely-x' ),
+				'sanitize' => array( $this, 'field_sanitize_token' ),
+			),
+			'optimizely_project_id' => array(
+				'label' => esc_html__( 'Choose a Project', 'optimizely-x' ),
+				'sanitize' => 'absint',
+			),
+			'optimizely_project_name' => array(
+				'label' => esc_html__( 'Project Name', 'optimizely-x' ),
+				'sanitize' => 'sanitize_text_field',
+			),
+			'optimizely_post_types' => array(
+				'label' => esc_html__( 'Post Types', 'optimizely-x' ),
+				'sanitize' => array( $this, 'field_sanitize_post_types' ),
+			),
+			'optimizely_url_targeting' => array(
+				'label' => esc_html__( 'Default URL Targeting', 'optimizely-x' ),
+				'sanitize' => array( $this, 'field_sanitize_url_targeting' ),
+			),
+			'optimizely_url_targeting_type' => array(
+				'label' => esc_html__( 'URL Targeting Type', 'optimizely-x' ),
+				'sanitize' => array( $this, 'field_sanitize_url_targeting_type' ),
+			),
+			'optimizely_variation_template' => array(
+				'label' => esc_html__( 'Variation Code', 'optimizely-x' ),
+				'sanitize' => array( $this, 'field_sanitize_variation_template' ),
+			),
+			'optimizely_activation_mode' => array(
+				'label' => esc_html__( 'Activation Mode', 'optimizely-x' ),
+				'sanitize' => array( $this, 'field_sanitize_activation_mode' ),
+			),
+			'optimizely_conditional_activation_code' => array(
+				'label' => esc_html__( 'Conditional Activation Code', 'optimizely-x' ),
+				'sanitize' => array( $this, 'field_sanitize_conditional_activation_code' ),
+			),
+			'optimizely_num_variations' => array(
+				'label' => esc_html__( 'Number of Variations', 'optimizely-x' ),
+				'sanitize' => array( $this, 'field_sanitize_num_variations' ),
+			),
+		);
+
+		// Register the config section.
+		add_settings_section(
+			'optimizely_config_section',
+			__( 'Optimizely Configuration', 'optimizely-x' ),
+			null,
+			'optimizely_config_options'
+		);
+
+		// Loop over field definitions and register each.
+		foreach ( $fields as $field_key => $field_properties ) {
+
+			// Add the definition for the field.
+			add_settings_field(
+				$field_key,
+				$field_properties['label'],
+				array( $this, 'render_field' ),
+				'optimizely_config_options',
+				'optimizely_config_section',
+				array(
+					'field_name' => $field_key,
+					'label_for' => str_replace( '_', '-', $field_key ),
+				)
+			);
+
+			// Register the fields.
+			register_setting(
+				'optimizely_config_section',
+				$field_key,
+				$field_properties['sanitize']
+			);
+		}
+	}
+
+	/**
+	 * Display admin notices for the plugin.
 	 *
 	 * @access public
 	 */
 	public function admin_notices() {
-		if ( ! get_option( 'optimizely_token' ) && ! isset( $_POST['submit'] ) ) :
-			?>
-			<div id="optimizely-warning" class="updated fade">
-				<p><strong><?php printf(
-					esc_html__( 'Optimizely is almost ready. You must first add your %1$sAPI Token%2$s in the %3$sconfiguration tab%4$s.', 'optimizely-x' ),
-					'<a href="https://app.optimizely.com/tokens" target="_blank">',
-					'</a>',
-					'<a href="' . esc_url( menu_page_url( 'optimizely-config', false ) . '#tabs-2' ) . '">',
-					'</a>'
-				); ?></strong></p>
-			</div>
-			<?php
-		endif;
-		if ( get_option( 'optimizely_token' ) && ! get_option( 'optimizely_project_id' ) && ! isset( $_POST['submit'] ) ) :
-			?>
-			<div id="optimizely-warning" class="updated fade">
-				<p>
-					<strong><?php esc_html_e( 'Optimizely is almost ready. You must choose a project.', 'optimizely-x' ); ?></strong>
-				</p>
-			</div>
-			<?php
-		endif;
+
+		// Display a message if no token is set or no project is selected.
+		if ( ! get_option( 'optimizely_token' ) ) {
+			Partials::load( 'admin', 'notices/no-token' );
+		} elseif ( 0 === absint( get_option( 'optimizely_project_id' ) ) ) {
+			Partials::load( 'admin', 'notices/no-project-id' );
+		}
 	}
 
 	/**
@@ -142,17 +254,17 @@ class Admin {
 		// Enqueue scripts and styles for the configuration page.
 		if ( 'toplevel_page_optimizely-config' === $hook ) {
 
-			// Enqueue main admin stylesheet.
+			// Enqueue main admin configuration stylesheet.
 			wp_enqueue_style(
-				Core::PLUGIN_SLUG . '_admin_style',
-				OPTIMIZELY_X_BASE_URL . '/admin/css/optimizely-x-admin.css',
+				'optimizely_admin_config_style',
+				OPTIMIZELY_X_BASE_URL . '/admin/css/config.css',
 				array(),
 				Core::VERSION
 			);
 
 			// Enqueue Optimizely jQuery UI stylesheet.
 			wp_enqueue_style(
-				Core::PLUGIN_SLUG . '_admin_jquery_ui_style',
+				'optimizely_admin_config_jquery_ui_style',
 				OPTIMIZELY_X_BASE_URL . '/admin/css/jquery-ui.css',
 				array(),
 				Core::VERSION
@@ -160,16 +272,16 @@ class Admin {
 
 			// Enqueue beautify.js.
 			wp_enqueue_script(
-				Core::PLUGIN_SLUG . '_beautify_js',
+				'optimizely_beautify_js',
 				OPTIMIZELY_X_BASE_URL . '/admin/js/beautify.min.js',
 				array(),
 				Core::VERSION
 			);
 
-			// Enqueue main admin script.
+			// Enqueue main admin configuration script.
 			wp_enqueue_script(
-				Core::PLUGIN_SLUG . '_admin_script',
-				OPTIMIZELY_X_BASE_URL . '/admin/js/optimizely-x-admin.js',
+				'optimizely_admin_config_script',
+				OPTIMIZELY_X_BASE_URL . '/admin/js/config.js',
 				array(
 					'jquery',
 					'jquery-ui-core',
@@ -186,20 +298,182 @@ class Admin {
 
 			// Enqueue the meta box style.
 			wp_enqueue_style(
-				Core::PLUGIN_SLUG . '_meta_box_style',
-				OPTIMIZELY_X_BASE_URL . '/public/css/optimizely-x-public.css',
+				'optimizely_admin_metabox_style',
+				OPTIMIZELY_X_BASE_URL . '/public/css/metabox.css',
 				array(),
 				Core::VERSION
 			);
 
 			// Enqueue the meta box script.
 			wp_enqueue_script(
-				Core::PLUGIN_SLUG . '_meta_box_script',
-				OPTIMIZELY_X_BASE_URL . '/public/js/optimizely-x-public.js',
+				'optimizely_admin_metabox_script',
+				OPTIMIZELY_X_BASE_URL . '/public/js/metabox.js',
 				array( 'jquery' ),
 				Core::VERSION
 			);
 		}
+	}
+
+	/**
+	 * A callback function to sanitize the value of optimizely_activation_mode.
+	 *
+	 * @param string $option_value The option value passed from the Settings API.
+	 *
+	 * @since 1.0.0
+	 * @access public
+	 * @return string The sanitized option value.
+	 */
+	public function field_sanitize_activation_mode( $option_value ) {
+
+		// Default to 'immediate'.
+		if ( empty( $option_value ) ) {
+			$option_value = 'immediate';
+		}
+
+		return sanitize_text_field( $option_value );
+	}
+
+	/**
+	 * A callback function to sanitize the value of optimizely_conditional_activation_code.
+	 *
+	 * @param string $option_value The option value passed from the Settings API.
+	 *
+	 * @since 1.0.0
+	 * @access public
+	 * @return string The sanitized option value.
+	 */
+	public function field_sanitize_conditional_activation_code( $option_value ) {
+
+		// If not specified, load the default template.
+		if ( empty( $option_value ) ) {
+			$option_value = self::DEFAULT_CONDITIONAL_TEMPLATE;
+		}
+
+		return sanitize_text_field( $option_value );
+	}
+
+	/**
+	 * A callback function to sanitize the value of optimizely_num_variations.
+	 *
+	 * @param string $option_value The option value passed from the Settings API.
+	 *
+	 * @since 1.0.0
+	 * @access public
+	 * @return string The sanitized option value.
+	 */
+	public function field_sanitize_num_variations( $option_value ) {
+
+		// If not specified, use the default value.
+		if ( empty( $option_value ) ) {
+			$option_value = 2;
+		}
+
+		return sanitize_text_field( $option_value );
+	}
+
+	/**
+	 * A callback function to sanitize the value of optimizely_post_types.
+	 *
+	 * @param string $option_value The option value passed from the Settings API.
+	 *
+	 * @since 1.0.0
+	 * @access public
+	 * @return array The sanitized option value.
+	 */
+	public function field_sanitize_post_types( $option_value ) {
+
+		// We are expecting an array. If we aren't given an array, reset to empty.
+		if ( ! is_array( $option_value ) ) {
+			return array();
+		}
+
+		// Sanitize against the list of supported post types.
+		$option_value = array_intersect(
+			array_keys( self::supported_post_types() ),
+			$option_value
+		);
+
+		return $option_value;
+	}
+
+	/**
+	 * A callback function to sanitize the value of optimizely_token before saving.
+	 *
+	 * @param string $option_value The option value passed from the Settings API.
+	 *
+	 * @since 1.0.0
+	 * @access public
+	 * @return string The sanitized option value.
+	 */
+	public function field_sanitize_token( $option_value ) {
+
+		// Load the current value and determine if the option value is equivalent
+		// to hashing the value saved in the database. If so, use the current value
+		// instead of replacing it with the hashed version used for form display.
+		$current_value = get_option( 'optimizely_token' );
+		$hashed_value = hash( 'ripemd160', $current_value );
+		if ( $option_value === $hashed_value ) {
+			return $current_value;
+		}
+
+		return sanitize_text_field( $option_value );
+	}
+
+	/**
+	 * A callback function to sanitize the value of optimizely_url_targeting.
+	 *
+	 * @param string $option_value The option value passed from the Settings API.
+	 *
+	 * @since 1.0.0
+	 * @access public
+	 * @return string The sanitized option value.
+	 */
+	public function field_sanitize_url_targeting( $option_value ) {
+
+		// Default to the site url.
+		if ( empty( $option_value ) ) {
+			$option_value = get_site_url();
+		}
+
+		return sanitize_text_field( $option_value );
+	}
+
+	/**
+	 * A callback function to sanitize the value of optimizely_url_targeting_type.
+	 *
+	 * @param string $option_value The option value passed from the Settings API.
+	 *
+	 * @since 1.0.0
+	 * @access public
+	 * @return string The sanitized option value.
+	 */
+	public function field_sanitize_url_targeting_type( $option_value ) {
+
+		// Default to 'substring'.
+		if ( empty( $option_value ) ) {
+			$option_value = 'substring';
+		}
+
+		return sanitize_text_field( $option_value );
+	}
+
+	/**
+	 * A callback function to sanitize the value of optimizely_variation_template.
+	 *
+	 * @param string $option_value The option value passed from the Settings API.
+	 *
+	 * @since 1.0.0
+	 * @access public
+	 * @return string The sanitized option value.
+	 */
+	public function field_sanitize_variation_template( $option_value ) {
+
+		// If not specified, load the default template.
+		if ( empty( $option_value ) ) {
+			$option_value = self::DEFAULT_VARIATION_TEMPLATE;
+		}
+
+		return sanitize_text_field( $option_value );
 	}
 
 	/**
@@ -210,7 +484,89 @@ class Admin {
 	 * @access public
 	 */
 	public function metabox_headlines_render( $post ) {
-		require_once OPTIMIZELY_X_BASE_DIR . '/public/partials/optimizely-x-public-display.php';
+
+		// Add loading container for display until API calls complete.
+		Partials::load( 'admin', 'metabox/loading' );
+
+		// Handle unauthenticated state.
+		if ( false === self::is_initialized() ) {
+			Partials::load( 'admin', 'metabox/unauthenticated' );
+
+			return;
+		}
+
+		// Handle unpublished state.
+		if ( 'publish' !== $post->post_status ) {
+			Partials::load( 'admin', 'metabox/unpublished' );
+
+			return;
+		}
+
+		// Determine whether to include new state.
+		$experiment_id = get_post_meta( $post->ID, 'optimizely_experiment_id', true );
+		if ( empty( $experiment_id ) ) {
+			Partials::load( 'admin', 'metabox/new' );
+		}
+
+		// Load running state.
+		Partials::load( 'admin', 'metabox/running' );
+	}
+
+	/**
+	 * Callback function to render the optimizely-config admin menu page.
+	 *
+	 * @since 1.0.0
+	 * @access public
+	 */
+	public function render_page_config() {
+		Partials::load( 'admin', 'config' );
+	}
+
+	/**
+	 * A callback function to render a configuration field using the Settings API.
+	 *
+	 * @param array $args {
+	 *      An array of arguments passed to the callback during field registration.
+	 *
+	 *      @type string $field_name The name of the field that was registered.
+	 *                               Required. Used to load the field render partial.
+	 * }
+	 *
+	 * @since 1.0.0
+	 * @access public
+	 */
+	public function render_field( $args ) {
+
+		// Ensure a field name was specified for loading the partial.
+		if ( empty( $args['field_name'] ) ) {
+			return;
+		}
+
+		// Load the partial for the field.
+		Partials::load( 'admin', 'fields/' . str_replace( '_', '-', $args['field_name'] ) );
+	}
+
+	/**
+	 * Migrates legacy settings to new formats.
+	 *
+	 * @since 1.0.0
+	 * @access public
+	 */
+	public function upgrade_check() {
+
+		// Determine if the database version and code version are the same.
+		$current_version = get_option( 'optimizely_version' );
+		if ( version_compare( $current_version, Core::VERSION, '>=' ) ) {
+			return;
+		}
+
+		// Handle upgrade to version 1.0.0.
+		if ( version_compare( $current_version, '1.0.0', '<' ) ) {
+			$this->upgrade_to_1_0_0();
+		}
+
+		// Set the database version to the current version in code.
+		update_option( 'optimizely_version', Core::VERSION );
 	}
 
 	/**
@@ -273,120 +629,56 @@ class Admin {
 		// Register action hooks.
 		add_action( 'add_meta_boxes', array( $this, 'add_meta_boxes' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
+		add_action( 'admin_init', array( $this, 'add_settings' ) );
 		add_action( 'admin_menu', array( $this, 'add_menu_page' ) );
 		add_action( 'admin_notices', array( $this, 'admin_notices' ) );
+		add_action( 'plugins_loaded', array( $this, 'upgrade_check' ) );
 	}
 
-	// TODO: Refactor from here down.
+	/**
+	 * Upgrades the database version of the plugin to version 1.0.0.
+	 *
+	 * @access private
+	 */
+	private function upgrade_to_1_0_0() {
 
-	public function optimizely_store_post_data() {
+		// Attempt to convert legacy project ID to new format.
+		$project_id = absint( get_option( 'optimizely_project_id' ) );
+		if ( empty( $project_id ) ) {
 
-		if ( ! current_user_can( apply_filters( 'optimizely_admin_capability', 'manage_options' ) ) ) {
-			die( esc_html__( 'Cheatin&#8217; uh?', 'optimizely-x' ) );
+			// Determine whether to migrate settings from legacy project code.
+			$project_code = get_option( 'optimizely_project_code' );
+			if ( ! empty( $project_code )
+				&& false !== strpos( $project_code, 'js' )
+			) {
+
+				// Extract the project ID from the project code.
+				$project_id = substr( $project_code, strpos( $project_code, 'js' ) + 3 );
+				$project_id = substr( $project_id, 0, strpos( $project_id, 'js' ) - 1 );
+				$project_id = absint( $project_id );
+
+				// Determine whether the extraction was successful.
+				if ( ! empty( $project_id ) ) {
+
+					// Remove the old project code and save the ID to the new option.
+					delete_option( 'optimizely_project_code' );
+					update_option( 'optimizely_project_id', $project_id );
+				}
+			}
 		}
 
-		// Check the nonce
-		check_admin_referer( OPTIMIZELY_NONCE );
-
-		// Sanitize values
-		$token = sanitize_text_field( $_POST['token'] );
-		$project_id = sanitize_text_field( $_POST['project_id'] );
-		$num_variations = sanitize_text_field( $_POST['optimizely_num_variations'] );
-		$optimizely_post_types = $_POST['optimizely_post_types'];
-		$optimizely_visitor_count = str_replace( ',', '', sanitize_text_field( $_POST['optimizely_visitor_count'] ) );
-		$project_name = sanitize_text_field( stripcslashes( $_POST['project_name'] ) );
-		$variation_template = sanitize_text_field( stripcslashes( $_POST['variation_template' ] ) );
-		$activation_mode = sanitize_text_field( $_POST['optimizely_activation_mode' ] );
-		$conditional_activation_code = sanitize_text_field( stripcslashes( $_POST['conditional_activation_code' ] ) );
-		$optimizely_url_targeting_type = sanitize_text_field( $_POST['optimizely_url_targeting_type'] );
-		$optimizely_url_targeting = sanitize_text_field( $_POST['optimizely_url_targeting'] );
-
-    //2:aa523e0c-U2UK_-avHKWpbBb_-hjBujRAf82wsHYt7W4YqVaehg
-
-		// Either save or delete/set a default if empty for each value
-		if ( !empty( $token ) && $token != hash('ripemd160', get_option( 'optimizely_token' ) ) ) {
-			update_option( 'optimizely_token', $token );
-		}
-    if(empty( $token )){
-  		if ( empty( $project_id ) ) {
-  			delete_option( 'optimizely_project_id' );
-  		} else {
-  			update_option( 'optimizely_project_id', $project_id );
-  		}
-
-  		if ( empty( $num_variations ) ) {
-  			delete_option( 'optimizely_num_variations' );
-  		} else {
-  			update_option( 'optimizely_num_variations', $num_variations );
-  		}
-
-  		if ( empty( $optimizely_post_types ) ) {
-  			update_option( 'optimizely_post_types', '' );
-  		} else {
-  			$post_type_string = '';
-  			foreach ( $optimizely_post_types as $post_type ) {
-  				$post_type_string = $post_type_string . $post_type . ',';
-  			}
-  			update_option( 'optimizely_post_types', trim( $post_type_string, ',' ) );
-  		}
-
-  		if ( empty( $project_name ) ) {
-  			delete_option( 'optimizely_project_name' );
-  		} else {
-  			update_option( 'optimizely_project_name', $project_name );
-  		}
-
-  		if ( empty( $variation_template ) ) {
-  			update_option( 'optimizely_variation_template', OPTIMIZELY_DEFAULT_VARIATION_TEMPLATE );
-  		} else {
-  			update_option( 'optimizely_variation_template', $variation_template );
-  		}
-
-  		if ( empty( $conditional_activation_code ) ) {
-  			update_option( 'optimizely_conditional_activation_code', OPTIMIZELY_DEFAULT_CONDITIONAL_TEMPLATE );
-  		} else {
-  			update_option( 'optimizely_conditional_activation_code', $conditional_activation_code );
-  		}
-
-  		if ( empty( $activation_mode ) ) {
-  			delete_option( 'optimizely_activation_mode', 'immediate' );
-  		} else {
-  			update_option( 'optimizely_activation_mode', $activation_mode );
-  		}
-
-  		if ( empty( $optimizely_url_targeting ) ) {
-  			delete_option( 'optimizely_url_targeting', get_site_url() );
-  		} else {
-  			update_option( 'optimizely_url_targeting', $optimizely_url_targeting );
-  		}
-
-  		if ( empty( $optimizely_url_targeting_type ) ) {
-  			delete_option( 'optimizely_url_targeting_type', 'substring' );
-  		} else {
-  			update_option( 'optimizely_url_targeting_type', $optimizely_url_targeting_type );
-  		}
-    }
-		?>
-		<div id="message" class="updated fade"><p><strong><?php esc_html_e( 'Settings saved.', 'optimizely-x' ); ?></strong></p></div>
-		<?php
-
-	}
-
-	public function optimizely_configuration() {
-
-		echo('<div class="optimizely_admin">');
-
-		if ( isset( $_POST['submit'] ) ) {
-			self::optimizely_store_post_data();
+		// Attempt to convert legacy post types value to array.
+		$post_types = get_option( 'optimizely_post_types' );
+		if ( ! is_array( $post_types ) ) {
+			$post_types = array_filter( explode( ',', $post_types ) );
 		}
 
-		$loading_image = esc_url( plugin_dir_url( __FILE__ ) ).'images/ajax-loader.gif';
-
-		// Display the config form.
-		if(get_option('optimizely_token')){
-			$token_set = true;
+		// If no post types selected, set to default.
+		if ( empty( $post_types ) ) {
+			$post_types = array( 'post' );
 		}
-		include( dirname( __FILE__ ) . '/partials/optimizely-x-admin-display.php' );
-		echo('</div>');
+
+		// Update the option.
+		update_option( 'optimizely_post_types', $post_types );
 	}
 }

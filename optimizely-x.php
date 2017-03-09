@@ -51,7 +51,7 @@ define( 'OPTIMIZELY_X_BASE_URL', untrailingslashit( plugin_dir_url( __FILE__ ) )
  *
  * @private
  */
-function optimizely_x_load_class( $class ) {
+function optimizely_load_class( $class ) {
 
 	// Set project-specific namespace prefix.
 	$prefix = 'Optimizely_X\\';
@@ -80,7 +80,7 @@ function optimizely_x_load_class( $class ) {
 }
 
 // Initialize the autoloader.
-spl_autoload_register( 'optimizely_x_load_class' );
+spl_autoload_register( 'optimizely_load_class' );
 
 // Bootstrap the plugin.
 Optimizely_X\Core::instance();

@@ -17,14 +17,6 @@ namespace Optimizely_X;
 class Core {
 
 	/**
-	 * The unique identifier of this plugin.
-	 *
-	 * @since 1.0.0
-	 * @var string
-	 */
-	const PLUGIN_SLUG = 'optimizely_x';
-
-	/**
 	 * The current version of the plugin.
 	 *
 	 * @since 1.0.0
