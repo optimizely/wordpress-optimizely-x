@@ -16,16 +16,6 @@ namespace Optimizely_X;
 class API {
 
 	/**
-	 * The base URL for the Optimizely API, used whenever requests are made.
-	 *
-	 * @since 1.0.0
-	 * @var string
-	 */
-	const BASE_URL = 'https://api.optimizely.com/v2';
-
-	// TODO: Refactor from here down.
-
-	/**
 	 * Initialize the class and set its properties.
 	 *
 	 * @since    1.0.0
@@ -36,9 +26,6 @@ class API {
 	}
 
 	public function request($method, $url, $data, $wait_for_rate_limit) {
-
-		// Convert the relative partial URL to a full URL and sanitize it.
-		$url = esc_url( self::BASE_URL . $url );
 		$result = array();
 		$token = get_option( 'optimizely_token' );
 		$result['error'] = array();
@@ -107,7 +94,7 @@ class API {
 		}
 	}
 
-	public function list_request( $url, $data = array(), $wait_for_rate_limit = true ) {
+	public function list_request($url, $data, $wait_for_rate_limit){
 		if($wait_for_rate_limit && !array_key_exists('per_page', $data)) {
 			$data['per_page'] = 100;
 		}

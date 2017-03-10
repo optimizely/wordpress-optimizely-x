@@ -53,36 +53,6 @@ class AJAX {
 	}
 
 	/**
-	 * An AJAX endpoint to get a list of projects associated with the account.
-	 *
-	 * @since 1.0.0
-	 * @access public
-	 */
-	public function get_projects() {
-
-		// TODO: Figure out what comes back from that request and sanitize just what is needed.
-
-		// Get a list of projects from the API.
-		$response = $this->api->list_request( '/projects' );
-		$response['projects'] = array();
-		if ( ! empty( $response['json'] ) && is_array( $response['json'] ) ) {
-			foreach ( $response['json'] as $project ) {
-				if ( ! $project['is_classic'] && 'active' === $project['status'] ) {
-					$response['projects'][ $project['name'] ] = $project['id'];
-				}
-			}
-		}
-
-		// Remove the JSON and body components of the response.
-		unset( $response['json'] );
-		unset( $response['body'] );
-
-		// Send the JSON to the requester.
-		echo wp_json_encode( $response );
-		wp_die();
-	}
-
-	/**
 	 * Empty clone method, forcing the use of the instance() method.
 	 *
 	 * @see self::instance()
@@ -139,6 +109,26 @@ class AJAX {
 	}
 
 	// TODO: Refactor from here.
+
+	function get_projects() {
+		$result = array();
+
+		$response_body = $this->api->list_request('https://api.optimizely.com/v2/projects', array(), true);
+
+		if(array_key_exists('json', $response_body)){
+			foreach ($response_body['json'] as $project) {
+				if(!$project['is_classic'] && $project['status'] == 'active') {
+
+					$result[$project['name']] = $project['id'];
+				}
+			}
+		}
+		unset($response_body['json']);
+		unset($response_body['body']);
+
+		$response_body['projects'] = $result;
+		die(json_encode($response_body));
+	}
 
 	function replace_placeholder_post_id($condition_code, $post_id){
 		return preg_replace('/\$POST_ID/', $post_id, $condition_code);
