@@ -32,7 +32,7 @@
 		var data = {
 			'action': 'optimizely_x_change_status',
 			'status': window.optimizelyIntegration.status,
-			'entitiy_id': window.optimizelyIntegration.entitiy_id
+			'entity_id': window.optimizelyIntegration.entity_id
 		};
 		// since 2.8 ajaxurl is always defined in the admin header and points to admin-ajax.php
 		jQuery.ajax({
@@ -66,10 +66,10 @@
 	$('#optimizely_toggle_running').click(changeStatus);
 
 	var updateRunning = function(data, variations){
-		$('#optimizely_view').attr('href', data.json.link);
+		$('#optimizely_view').attr('href', data.editor_link);
 		$(".optimizely_loading").addClass('hidden');
 		$('.optimizely_running_experiment').removeClass('hidden');
-		$("#optimizely_experiment_id").html(data.json.id);
+		$("#optimizely_experiment_id").html(data.experiment_id);
 		window.optimizelyIntegration.status = 'paused';
 		$("#optimizely_experiment_status_text").html(window.optimizelyIntegration.status);
 
@@ -87,7 +87,7 @@
 		var data = {
 	  	'action': 'optimizely_x_create_experiment',
 	  	'variations': JSON.stringify(variations),
-			'entitiy_id': window.optimizelyIntegration.entitiy_id
+			'entity_id': window.optimizelyIntegration.entity_id
 		};
 		// since 2.8 ajaxurl is always defined in the admin header and points to admin-ajax.php
 		jQuery.ajax({

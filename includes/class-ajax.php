@@ -53,6 +53,245 @@ class AJAX {
 	}
 
 	/**
+	 * An AJAX endpoint for optimizely_x_change_status.
+	 *
+	 * @since 1.0.0
+	 * @access public
+	 */
+	public function change_status() {
+
+		// Check for error condition.
+		if ( empty( $_POST['entity_id'] ) || empty( $_POST['status'] ) ) {
+			$this->send_error_response( 403, 'ERROR' );
+		}
+
+		// Sanitize postdata before proceeding.
+		$post_id = absint( $_POST['entity_id'] );
+		$status = sanitize_text_field( $_POST['status'] );
+
+		// Ensure we have an experiment ID before proceeding.
+		$experiment_id = get_post_meta( $post_id, 'optimizely_experiment_id', true );
+		if ( empty( $experiment_id ) ) {
+			$this->send_error_response( 404, 'ERROR' );
+		}
+
+		// Build API request path.
+		$action = ( 'paused' === $status ) ? 'publish_start' : 'pause';
+		$operation = '/experiments/' . $experiment_id . '/?action=' . $action;
+
+		// Process the request and check for errors.
+		$response = $this->api->patch( $operation );
+		$this->maybe_send_error_response( $response );
+
+		// Ensure we got a status in the response.
+		if ( empty( $response['json']['status'] ) ) {
+			$this->send_error_response( 400, 'ERROR' );
+		}
+
+		// Return the status in the AJAX response.
+		echo wp_json_encode(
+			array(
+				'status' => sanitize_text_field( $response['json']['status'] ),
+			)
+		);
+		wp_die();
+	}
+
+	/**
+	 * An AJAX endpoint for optimizely_x_change_status.
+	 *
+	 * @since 1.0.0
+	 * @access public
+	 */
+	public function create_experiment() {
+
+		// Check for error conditions.
+		if ( empty( $_POST['entity_id'] ) || empty( $_POST['variations'] ) ) {
+			$this->send_error_response( 403, 'ERROR' );
+		}
+
+		// Ensure we have a project ID before proceeding.
+		$project_id = absint( get_option( 'optimizely_project_id' ) );
+		if ( empty( $project_id ) ) {
+			$this->send_error_response( 403, 'ERROR' );
+		}
+
+		// Extract variations from the values sent from the metabox.
+		$variations = json_decode( wp_unslash( $_POST['variations'] ), true );
+		if ( empty( $variations ) || ! is_array( $variations ) ) {
+			$this->send_error_response( 403, 'ERROR' );
+		}
+
+		// Sanitize variations before proceeding.
+		$variations = array_map( 'sanitize_text_field', $variations );
+		$variations = array_filter( $variations );
+		if ( empty( $variations ) ) {
+			$this->send_error_response( 403, 'ERROR' );
+		}
+
+		// Try to get a post from the entity ID.
+		$post = get_post( absint( $_POST['entity_id'] ) );
+		if ( empty( $post ) ) {
+			$this->send_error_response( 403, 'ERROR' );
+		}
+
+		// Try to build a targeting page for this post.
+		$targeting_id = $this->build_targeting_page( $project_id, $post );
+		if ( empty( $targeting_id ) ) {
+			$this->send_error_response(
+				403,
+				'ERROR',
+				array(
+					__(
+						'An error occurred during the creation of a targeting page.',
+						'optimizely-x'
+					),
+				)
+			);
+		}
+
+		// Try to build an event page for this post.
+		$event_id = $this->build_event_page( $project_id, $post );
+		if ( empty( $event_id ) ) {
+			$this->send_error_response(
+				403,
+				'ERROR',
+				array(
+					__(
+						'An error occurred during the creation of an event page.',
+						'optimizely-x'
+					),
+				)
+			);
+		}
+
+		// Try to create an experiment for this post.
+		$experiment_id = $this->build_experiment(
+			$project_id,
+			$post,
+			$variations,
+			$targeting_id,
+			$event_id
+		);
+		if ( empty( $event_id ) ) {
+			$this->send_error_response(
+				403,
+				'ERROR',
+				array(
+					__(
+						'An error occurred during the creation of an event page.',
+						'optimizely-x'
+					),
+				)
+			);
+		}
+
+		// Get the editor link for the experiment.
+		$editor_link = sprintf(
+			'https://app.optimizely.com/v2/projects/%d/experiments/%d',
+			absint( $project_id ),
+			absint( $experiment_id )
+		);
+
+		// Store the editor link in postmeta.
+		add_post_meta(
+			$post->ID,
+			'optimizely_editor_link',
+			esc_url_raw( $editor_link )
+		);
+
+		// Store the experiment ID in postmeta.
+		add_post_meta(
+			$post->ID,
+			'optimizely_experiment_id',
+			absint( $experiment_id )
+		);
+
+		// Store the experiment status in postmeta.
+		add_post_meta(
+			$post->ID,
+			'optimizely_experiment_status',
+			'paused'
+		);
+
+		// Store the number of variations in postmeta.
+		add_post_meta(
+			$post->ID,
+			'optimizely_variations_num',
+			count( $variations )
+		);
+
+		// Loop over variations and store each in postmeta.
+		$total_variations = count( $variations );
+		for ( $i = 0; $i < $total_variations; $i ++ ) {
+			add_post_meta(
+				$post->ID,
+				sprintf( 'optimizely_variations_%d', absint( $i ) ),
+				sanitize_text_field( $variations[ $i ] )
+			);
+		}
+
+		// Send the response.
+		echo wp_json_encode(
+			array(
+				'editor_link' => esc_url_raw( $editor_link ),
+				'experiment_id' => absint( $experiment_id ),
+				'status' => 'SUCCESS',
+			)
+		);
+		wp_die();
+	}
+
+	/**
+	 * An AJAX endpoint for optimizely_x_get_projects.
+	 *
+	 * @since 1.0.0
+	 * @access public
+	 */
+	public function get_projects() {
+
+		// Get the response from the API and check for errors.
+		$response = $this->api->get( '/projects' );
+		$this->maybe_send_error_response( $response );
+
+		// Ensure there are results to loop over.
+		if ( empty( $response['json'] ) || ! is_array( $response['json'] ) ) {
+			$this->send_error_response( 400, 'ERROR' );
+			wp_die();
+		}
+
+		// Loop over results from response and add each to the list.
+		$projects = array();
+		foreach ( $response['json'] as $project ) {
+			if ( empty( $project['is_classic'] )
+				&& ! empty( $project['status'] )
+				&& 'active' === $project['status']
+				&& ! empty( $project['name'] )
+				&& ! empty( $project['id'] )
+			) {
+
+				// Sanitize name and ID.
+				$name = sanitize_text_field( $project['name'] );
+				$id = absint( $project['id'] );
+
+				// Make sure we still have a name and ID before adding.
+				if ( ! empty( $name ) && ! empty( $id ) ) {
+					$projects[ $name ] = $id;
+				}
+			}
+		}
+
+		// Send the AJAX response.
+		echo wp_json_encode(
+			array(
+				'projects' => $projects,
+				'status' => 'SUCCESS',
+			)
+		);
+		wp_die();
+	}
+
+	/**
 	 * Empty clone method, forcing the use of the instance() method.
 	 *
 	 * @see self::instance()
@@ -108,256 +347,379 @@ class AJAX {
 		);
 	}
 
-	// TODO: Refactor from here.
+	/**
+	 * Uses the API to build an event page for a given post.
+	 *
+	 * @param int $project_id The project ID to use when building the page.
+	 * @param \WP_Post $post A post object to operate on.
+	 *
+	 * @since 1.0.0
+	 * @access private
+	 * @return int|bool An event ID on success, or false on failure.
+	 */
+	private function build_event_page( $project_id, $post ) {
 
-	function get_projects() {
-		$result = array();
+		// Ensure we have a project ID.
+		$project_id = absint( $project_id );
+		if ( empty( $project_id ) ) {
+			return false;
+		}
 
-		$response_body = $this->api->list_request('https://api.optimizely.com/v2/projects', array(), true);
+		// Build the data array for the event page.
+		$event_page = array(
+			'activation_type' => 'immediate',
+			'conditions' => array(
+				'and',
+				array(
+					'or',
+					array(
+						'match_type' => 'substring',
+						'type' => 'url',
+						'value' => get_permalink( $post ),
+					),
+				),
+			),
+			'edit_url' => get_permalink( $post ),
+			'name' => sprintf(
+				esc_html_x(
+					'WordPress [%1$d]: %2$s event page',
+					'First parameter is the post ID, second is the post title.',
+					'optimizely-x'
+				),
+				absint( $post->ID ),
+				esc_html( $post->post_title )
+			),
+			'page_type' => 'url_set',
+			'project_id' => absint( $project_id ),
+		);
 
-		if(array_key_exists('json', $response_body)){
-			foreach ($response_body['json'] as $project) {
-				if(!$project['is_classic'] && $project['status'] == 'active') {
+		// Collapse conditions (API request must be formatted this way).
+		$event_page['conditions'] = wp_json_encode( $event_page['conditions'] );
 
-					$result[$project['name']] = $project['id'];
-				}
+		// Get the API response and check for errors.
+		$response = $this->api->post( '/pages', $event_page );
+		$this->maybe_send_error_response( $response );
+
+		// Ensure we got an ID.
+		if ( empty( $response['json']['id'] ) ) {
+			return false;
+		}
+
+		return absint( $response['json']['id'] );
+	}
+
+	/**
+	 * Uses the API to create an experiment for a given post.
+	 *
+	 * @param int $project_id The project ID to use when building the page.
+	 * @param \WP_Post $post A post object to operate on.
+	 * @param array $variations The variations to test.
+	 * @param int $targeting_id The ID of the targeting page for this post.
+	 * @param int $event_id The ID of the event page for this post.
+	 *
+	 * @since 1.0.0
+	 * @access private
+	 * @return int|bool An event ID on success, or false on failure.
+	 */
+	private function build_experiment(
+		$project_id,
+		$post,
+		$variations,
+		$targeting_id,
+		$event_id
+	) {
+
+		// Check preconditions.
+		$project_id = absint( $project_id );
+		$targeting_id = absint( $targeting_id );
+		$event_id = absint( $event_id );
+		if ( empty( $project_id )
+			|| empty( $variations )
+			|| ! is_array( $variations )
+			|| empty( $targeting_id )
+			|| empty( $event_id )
+		) {
+			return false;
+		}
+
+		// Build the data array for the experiment.
+		$experiment = array(
+			'metrics' => array(
+				array(
+					'aggregator' => 'unique',
+					'event_id' => absint( $event_id ),
+					'scope' => 'visitor',
+				),
+			),
+			'name' => sprintf(
+				esc_html_x(
+					'WordPress [%1$d]: %2$s',
+					'First parameter is the post ID, second is the post title.',
+					'optimizely-x'
+				),
+				absint( $post->ID ),
+				esc_html( $post->post_title )
+			),
+			'project_id' => absint( $project_id ),
+			'status' => 'paused',
+			'variations' => $this->generate_variations(
+				$variations,
+				$targeting_id,
+				$post
+			),
+		);
+
+		// Get the API response and check for errors.
+		$response = $this->api->post( '/experiments', $experiment );
+		$this->maybe_send_error_response( $response );
+
+		// Ensure we got an ID.
+		if ( empty( $response['json']['id'] ) ) {
+			return false;
+		}
+
+		return absint( $response['json']['id'] );
+	}
+
+	/**
+	 * Uses the API to build a targeting page for a given post.
+	 *
+	 * @param int $project_id The project ID to use when building the page.
+	 * @param \WP_Post $post A post object to operate on.
+	 *
+	 * @since 1.0.0
+	 * @access private
+	 * @return int|bool A targeting ID on success, or false on failure.
+	 */
+	private function build_targeting_page( $project_id, $post ) {
+
+		// Ensure we have a project ID.
+		$project_id = absint( $project_id );
+		if ( empty( $project_id ) ) {
+			return false;
+		}
+
+		// Start building a data array for the targeting page.
+		$targeting_page = array(
+			'activation_type' => 'immediate',
+			'conditions' => array(
+				'and',
+				array(
+					'or',
+					array(
+						'match_type' => 'substring',
+						'type' => 'url',
+						'value' => get_site_url(),
+					),
+				),
+			),
+			'edit_url' => get_permalink( $post ),
+			'name' => sprintf(
+				esc_html_x(
+					'WordPress [%1$d]: %2$s targeting page',
+					'First parameter is the post ID, second is the post title.',
+					'optimizely-x'
+				),
+				absint( $post->ID ),
+				esc_html( $post->post_title )
+			),
+			'page_type' => 'url_set',
+			'project_id' => absint( $project_id ),
+		);
+
+		// Override activation type if specified activation mode is conditional.
+		if ( 'conditional' === get_option( 'optimizely_activation_mode' ) ) {
+			$targeting_page['activation_type'] = 'polling';
+
+			// Try to set conditional activation code.
+			$activation_code = get_option( 'optimizely_conditional_activation_code' );
+			if ( ! empty( $activation_code ) ) {
+				$targeting_page['activation_code'] = str_replace(
+					'$POST_ID',
+					$post->ID,
+					$activation_code
+				);
 			}
 		}
-		unset($response_body['json']);
-		unset($response_body['body']);
 
-		$response_body['projects'] = $result;
-		die(json_encode($response_body));
-	}
-
-	function replace_placeholder_post_id($condition_code, $post_id){
-		return preg_replace('/\$POST_ID/', $post_id, $condition_code);
-	}
-
-	function replace_placeholder_new_title($condition_code, $new_title){
-		return preg_replace('/\$NEW_TITLE/', $new_title, $condition_code);
-	}
-
-	function replace_placeholder_old_title($condition_code, $old_title){
-		return preg_replace('/\$OLD_TITLE/', $old_title, $condition_code);
-	}
-
-	function generate_uuid(){
-		if (function_exists('com_create_guid')){
-			return trim(com_create_guid(), '{}');
-		} else {
-			mt_srand((double)microtime()*10000);//optional for php 4.2.0 and up.
-			$charid = strtoupper(md5(uniqid(rand(), true)));
-			$hyphen = chr(45);// "-"
-			$uuid = substr($charid, 0, 8).$hyphen
-				.substr($charid, 8, 4).$hyphen
-				.substr($charid,12, 4).$hyphen
-				.substr($charid,16, 4).$hyphen
-				.substr($charid,20,12);
-				return $uuid;
+		// Override URL targeting if options are set.
+		$url_targeting = get_option( 'optimizely_url_targeting' );
+		$url_targeting_type = get_option( 'optimizely_url_targeting_type' );
+		if ( ! empty( $url_targeting ) && ! empty( $url_targeting_type ) ) {
+			$targeting_page['conditions'][1][1]['match_type'] = sanitize_text_field(
+				$url_targeting_type
+			);
+			$targeting_page['conditions'][1][1]['value'] = sanitize_text_field(
+				$url_targeting
+			);
 		}
+
+		// Collapse conditions (API request must be formatted this way).
+		$targeting_page['conditions'] = wp_json_encode( $targeting_page['conditions'] );
+
+		// Get the API response and check for errors.
+		$response = $this->api->post( '/pages', $targeting_page );
+		$this->maybe_send_error_response( $response );
+
+		// Ensure we got an ID.
+		if ( empty( $response['json']['id'] ) ) {
+			return false;
+		}
+
+		return absint( $response['json']['id'] );
 	}
 
-	function get_editor_link($experiment_id){
-	  $project_id = get_option('optimizely_project_id');
-	  return 'https://app.optimizely.com/v2/projects/'.$project_id.'/experiments/'.$experiment_id;
+	/**
+	 * Builds the data for a variation to be included with the JSON request.
+	 *
+	 * @param string $title The title of the variation.
+	 * @param int $weight The variation weight.
+	 * @param int $targeting_id The ID of the targeting page.
+	 * @param \WP_Post $post The post object for which to generate variations.
+	 *
+	 * @since 1.0.0
+	 * @access private
+	 * @return array An array of data about the variation.
+	 */
+	private function generate_variation( $title, $weight, $targeting_id, $post ) {
+
+		// Load the variation template and swap out dynamic values.
+		$template = get_option( 'optimizely_variation_template' );
+		$template = str_replace( '$POST_ID', $post->ID, $template );
+		$template = str_replace( '$NEW_TITLE', $title, $template );
+		$template = str_replace( '$OLD_TITLE', $post->post_title, $template );
+
+		return array(
+			'actions' => array(
+				array(
+					'changes' => array(
+						array(
+							'async' => false,
+							'dependencies' => array(),
+							'type' => 'custom_code',
+							'value' => sanitize_text_field( $template ),
+						),
+					),
+					'page_id' => absint( $targeting_id ),
+				),
+			),
+			'name' => sanitize_text_field( $title ),
+			'weight' => absint( $weight ),
+		);
 	}
 
-	function generate_variation($num, $title, $weight, $targeting_id, $post_id){
-		$variation_template = get_option('optimizely_variation_template');
-		$original_title = $post = get_post( $post_id  )->post_title;
+	/**
+	 * Builds the data for variations to be included with the JSON request.
+	 *
+	 * @param array $variations The config data for the variations to build.
+	 * @param int $targeting_id The ID of the targeting page.
+	 * @param \WP_Post $post The post object for which to generate variations.
+	 *
+	 * @since 1.0.0
+	 * @access private
+	 * @return array An array of data about the variations.
+	 */
+	private function generate_variations( $variations, $targeting_id, $post ) {
 
-		$code = $this->replace_placeholder_post_id($variation_template, $post_id);
-		$code = $this->replace_placeholder_new_title($code, $title);
-		$code = $this->replace_placeholder_old_title($code, $original_title);
+		// Verify the preconditions.
+		if ( empty( $variations )
+			|| ! is_array( $variations )
+			|| empty( $targeting_id )
+			|| empty( $post->ID )
+		) {
+			return array();
+		}
 
-		$variation = array();
-		$variation['name'] = $title;
-		$variation['weight'] = $weight;
-		$variation['actions'] = array();
-		$variation['actions'][] = array();
-		$variation['actions'][0]['page_id'] = $targeting_id;
-		$variation['actions'][0]['changes'] = array();
-		$variation['actions'][0]['changes'][] = array();
-		$variation['actions'][0]['changes'][0]['type'] = 'custom_code';
-		$variation['actions'][0]['changes'][0]['dependencies'] = array();
-		$variation['actions'][0]['changes'][0]['async'] = False;
-		$variation['actions'][0]['changes'][0]['value'] = $code;
-
-		return $variation;
-	}
-
-	function generate_variations($variation_values, $targeting_id, $post_id){
-		$num_variations = count($variation_values) + 1;
+		// Calculate configuration values.
+		$num_variations = count( $variations ) + 1;
 		$variation_weight = floor( 10000 / $num_variations );
 		$leftover_weight = 10000 - ( $variation_weight * $num_variations );
 
-		$variation_weights = array();
-		for($i = 0; $i < $num_variations; $i++){
-			if($i < $num_variations - 1){
-				$variation_weights[] = $variation_weight;
-			} else {
-				$variation_weights[] = ($variation_weight + $leftover_weight);
-			}
+		// Build a list of variation weights that are guaranteed to add to 10,000.
+		$variation_weights = array_merge(
+			array_fill( 0, count( $variations ), $variation_weight ),
+			array( $variation_weight + $leftover_weight )
+		);
+
+		// Start building the variation data, starting with the original variation.
+		$variation_data = array(
+			array(
+				'actions' => array(
+					array(
+						'changes' => array(),
+						'page_id' => absint( $targeting_id ),
+					),
+				),
+				'name' => esc_html__( 'Original', 'optimizely-x' ),
+				'weight' => absint( $variation_weight ),
+			),
+		);
+
+		// Loop over provided variations and add each.
+		$total_variations = count( $variations );
+		for ( $i = 0; $i < $total_variations; $i ++ ) {
+			$variation_data[] = $this->generate_variation(
+				$variations[ $i ],
+				$variation_weights[ $i + 1 ],
+				$targeting_id,
+				$post
+			);
 		}
 
-		// Original variation
-		$original = array();
-		$original['name'] = 'Original';
-		$original['weight'] = $variation_weight;
-		$original['actions'] = array();
-		$original['actions'][] = array();
-		$original['actions'][0]['changes'] = array();
-		$original['actions'][0]['page_id'] = $targeting_id;
-
-		$variation_data = array();
-		$variation_data[] = $original;
-		for($i = 0; $i < count($variation_values); $i++){
-			$var = $this->generate_variation($i + 1, $variation_values[$i], $variation_weights[$i + 1], $targeting_id, $post_id);
-			$variation_data[] = $var;
-		}
 		return $variation_data;
 	}
 
 	/**
-	* Ajax handlers
-	*/
-	function create_experiment() {
-		if( !(array_key_exists('entitiy_id', $_POST) && array_key_exists('variations', $_POST)) ){
-			die('{"status":"ERROR","code":403}');
-		}
-		$variations_values = json_decode( stripslashes( $_POST['variations'] ), true);
+	 * Handles sending error responses, given an API response array.
+	 *
+	 * @param array $response The response array, returned from the API class.
+	 *
+	 * @since 1.0.0
+	 * @access private
+	 */
+	private function maybe_send_error_response( $response ) {
 
-		$experiment = array();
-		$targeting_page = array();
-		$event_page = array();
-
-		$post_id = $_POST['entitiy_id'];
-		$post = get_post( $post_id  );
-
-		$experiment['name'] = sprintf(
-			esc_html_x( 'WordPress [%1$d]: %2$s', 'First parameter is the post ID, second is the post title.', 'optimizely-x' ),
-			absint( $post_id ),
-			esc_html( $post->post_title )
-		);
-		$targeting_page['name'] = sprintf(
-			esc_html_x( 'WordPress [%1$d]: %2$s targeting page', 'First parameter is the post ID, second is the post title.', 'optimizely-x' ),
-			absint( $post_id ),
-			esc_html( $post->post_title )
-		);
-		$event_page['name'] = sprintf(
-			esc_html_x( 'WordPress [%1$d]: %2$s event page', 'First parameter is the post ID, second is the post title.', 'optimizely-x' ),
-			absint( $post_id ),
-			esc_html( $post->post_title )
-		);
-
-		$activation_mode = get_option('optimizely_activation_mode');
-		if($activation_mode == 'conditional') {
-			$targeting_page['activation_type'] = 'polling';
-			$targeting_page['activation_code'] = $this->replace_placeholder_post_id(get_option('optimizely_conditional_activation_code'), $post_id);
-		} else {
-			$targeting_page['activation_type'] = 'immediate';
-		}
-		$event_page['activation_type'] = 'immediate';
-		$targeting_page['edit_url'] = get_permalink( $post->ID );
-		$event_page['edit_url'] = get_permalink( $post->ID );
-
-		$url_target_domain = get_site_url();
-		$url_target_type = 'substring';
-		if ( "" != get_option('optimizely_url_targeting') &&  "" != get_option('optimizely_url_targeting_type') ){
-			$url_target_domain = get_option('optimizely_url_targeting');
-			$url_target_type = get_option('optimizely_url_targeting_type');
-		}
-		$targeting_page['page_type'] = 'url_set';
-		$targeting_page['conditions'] = '["and",["or",{"match_type":"'.$url_target_type.'","type":"url","value":"'.$url_target_domain.'"}]]';
-		$event_page['page_type'] = 'url_set';
-		$event_page['conditions'] = '["and",["or",{"match_type":"substring","type":"url","value":"'.get_permalink( $post->ID ).'"}]]';
-
-		$project_id = intval(get_option('optimizely_project_id'));
-		$targeting_page['project_id'] = $project_id;
-		$event_page['project_id'] = $project_id;
-
-		$targeting_page_response = $this->api->request('POST', 'https://api.optimizely.com/v2/pages', $targeting_page, true);
-		if($targeting_page_response['status'] != 'SUCCESS'){
-			$targeting_page_response['error'][] = esc_attr__( 'An error occurred during the creation of a targeting page.', 'optimizely-x' );
-			die(json_encode($targeting_page_response));
+		// If the operation was successful, don't send an error.
+		if ( ! empty( $response['status'] ) && 'SUCCESS' === $response['status'] ) {
+			return;
 		}
 
-		$event_page_response = $this->api->request('POST', 'https://api.optimizely.com/v2/pages', $event_page, true);
-		if($event_page_response['status'] != 'SUCCESS'){
-			$event_page_response['error'][] = esc_attr__( 'An error occurred during the creation of an event page.', 'optimizely-x' );
-			die(json_encode($event_page_response));
-		}
+		// Extract error values from the response.
+		$code = ( ! empty( $response['code'] ) ) ? $response['code'] : 400;
+		$error = ( ! empty( $response['error'] ) ) ? $response['error'] : array();
+		$status = ( ! empty( $response['status'] ) ) ? $response['status'] : 'ERROR';
 
-		$targeting_id = $targeting_page_response['json']['id'];
-		$event_id = $event_page_response['json']['id'];
-		$variations = $this->generate_variations($variations_values, $targeting_id, $post_id);
-
-		$experiment['project_id'] = $project_id;
-		$experiment['status'] = 'paused';
-		$experiment['metrics'] = array();
-		$experiment['metrics'][] = array();
-		$experiment['metrics'][0]['event_id'] = intval($event_id);
-		$experiment['metrics'][0]['scope'] = 'visitor';
-		$experiment['metrics'][0]['aggregator'] = 'unique';
-		$experiment['variations'] = $variations;
-
-		$experiment_response = $this->api->request('POST', 'https://api.optimizely.com/v2/experiments', $experiment, true);
-		if($experiment_response['status'] != 'SUCCESS'){
-			$result['error'][] = esc_attr__( 'An error occurred during the creation of the experiment.', 'optimizely-x' );
-			die(json_encode($experiment_response));
-		}
-
-		// Cleanup when archived pages work again
-
-		// $delete_targeting_response = $this->api->request('DELETE', 'https://api.optimizely.com/v2/pages/'.$targeting_id, array(), true);
-		// if($delete_targeting_response['status'] != 'SUCCESS'){
-		// 	$delete_targeting_response['error'][] = "An error occured during the deletion of the targeting page.";
-		// 	die(json_encode($delete_targeting_response));
-		// }
-		// $delete_event_response = $this->api->request('DELETE', 'https://api.optimizely.com/v2/pages/'.$event_id, array(), true);
-		// if($delete_event_response['status'] != 'SUCCESS'){
-		// 	$delete_event_response['error'][] = "An error occured during the deletion of the event page.";
-		// 	die(json_encode($delete_event_response));
-		// }
-
-		add_post_meta($post->ID, 'optimizely_experiment_id', $experiment_response['json']['id']);
-		add_post_meta($post->ID, 'optimizely_experiment_status', 'paused');
-
-		add_post_meta($post->ID, 'optimizely_variations_num', count($variations_values));
-
-		add_post_meta($post->ID, 'optimizely_editor_link', $this->get_editor_link($experiment_response['json']['id']));
-
-
-		for($i = 0; $i < count($variations_values); $i++) {
-			add_post_meta($post->ID, 'optimizely_variations_'.($i), $variations_values[$i]);
-		}
-		$experiment_response['json']['link'] = $this->get_editor_link($experiment_response['json']['id']);
-
-		die(json_encode($experiment_response));
+		// Send the error response.
+		$this->send_error_response( $code, $status, $error );
 	}
 
+	/**
+	 * A function to send an error response via AJAX.
+	 *
+	 * @param int $code The HTTP error code to use.
+	 * @param string $status The status code string to use, such as SUCCESS or ERROR.
+	 * @param array $error An optional array of error messages.
+	 *
+	 * @since 1.0.0
+	 * @access private
+	 */
+	private function send_error_response( $code, $status, $error = array() ) {
 
-	function change_status(){
-		if( !(array_key_exists('entitiy_id', $_POST) && array_key_exists('status', $_POST)) ){
-			die('{"status":"ERROR","code":403}');
-		}
-		$post_id = $_POST['entitiy_id'];
-		$status = $_POST['status'];
-
-		$experiment_id = get_post_meta($post_id, 'optimizely_experiment_id');
-		if(isset($experiment_id) && count($experiment_id) > 0){
-		  $experiment_id = $experiment_id[0];
-			if($status == 'paused'){
-				$experiment_response = $this->api->request('PATCH', 'https://api.optimizely.com/v2/experiments/'.$experiment_id.'?action=publish_start', array(), true);
-			} else {
-				$experiment_response = $this->api->request('PATCH', 'https://api.optimizely.com/v2/experiments/'.$experiment_id.'?action=pause', array(), true);
-			}
-			die(json_encode($experiment_response));
+		// If (for whatever reason) the error is not an array, make it so.
+		if ( ! is_array( $error ) ) {
+			$error = array( $error );
 		}
 
+		// Send the error data in the response.
+		echo wp_json_encode(
+			array(
+				'code' => absint( $code ),
+				'error' => array_map( 'sanitize_text_field', $error ),
+				'status' => sanitize_text_field( $status ),
+			)
+		);
 
-
+		// Die with dignity.
+		wp_die();
 	}
-
 }

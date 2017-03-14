@@ -31,7 +31,7 @@ if ( empty( $num_variations ) ) {
 	</div>
 	<script>
 		window.optimizelyIntegration = window.optimizelyIntegration || {};
-		window.optimizelyIntegration.entitiy_id = <?php the_ID(); ?>;
+		window.optimizelyIntegration.entity_id = <?php the_ID(); ?>;
 		window.optimizelyIntegration.status = '<?php echo esc_js( $status ); ?>';
 	</script>
 	<div id="optimizely-created">

@@ -19,7 +19,7 @@
 <p class="description">
 	<?php printf(
 		esc_html__( 'Once you create an account, you can create a Personal Token on the %1$sdeveloper portal%2$s.', 'optimizely-x' ),
-		'<a href="https://app.optimizely.com/v2/accountsettings/apps/developers" target="_blank">',
+		'<a href="https://app.optimizely.com/v2/profile/api" target="_blank">',
 		'</a>'
 	); ?>
 </p>
