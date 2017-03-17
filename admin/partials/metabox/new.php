@@ -30,7 +30,7 @@ $num_variations = absint( get_option( 'optimizely_num_variations' ) );
 			</div>
 		<?php endfor; ?>
 	</div>
-	<div id="optimizely-create">
-		<a class="button button-primary"><?php esc_html_e( 'Create Experiment', 'optimizely-x' ); ?></a>
+	<div id="optimizely-not-created">
+		<a id="optimizely-create" class="button button-primary"><?php esc_html_e( 'Create Experiment', 'optimizely-x' ); ?></a>
 	</div>
 </div>

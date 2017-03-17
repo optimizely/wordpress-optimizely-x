@@ -19,7 +19,7 @@ if ( empty( $num_variations ) ) {
 ?>
 
 <div class="optimizely-running-experiment <?php if ( empty( $experiment_id ) ) : ?>hidden<?php endif; ?>">
-	<div class="experiment_running">
+	<div class="optimizely-experiment">
 		<?php for ( $i = 0; $i < $num_variations; $i++ ) : ?>
 			<p>
 				<?php esc_html_e( 'Variation', 'optimizely-x' ); ?>

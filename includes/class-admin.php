@@ -251,24 +251,16 @@ JAVASCRIPT;
 	 */
 	public function enqueue_scripts( $hook ) {
 
-		// Enqueue scripts and styles for the configuration page.
+		// Enqueue admin stylesheet.
+		wp_enqueue_style(
+			'optimizely_admin_style',
+			OPTIMIZELY_X_BASE_URL . '/admin/css/style.css',
+			array(),
+			Core::VERSION
+		);
+
+		// Enqueue scripts for the configuration page.
 		if ( 'toplevel_page_optimizely-config' === $hook ) {
-
-			// Enqueue main admin configuration stylesheet.
-			wp_enqueue_style(
-				'optimizely_admin_config_style',
-				OPTIMIZELY_X_BASE_URL . '/admin/css/config.css',
-				array(),
-				Core::VERSION
-			);
-
-			// Enqueue Optimizely jQuery UI stylesheet.
-			wp_enqueue_style(
-				'optimizely_admin_config_jquery_ui_style',
-				OPTIMIZELY_X_BASE_URL . '/admin/css/jquery-ui.css',
-				array(),
-				Core::VERSION
-			);
 
 			// Enqueue beautify.js.
 			wp_enqueue_script(
@@ -282,27 +274,13 @@ JAVASCRIPT;
 			wp_enqueue_script(
 				'optimizely_admin_config_script',
 				OPTIMIZELY_X_BASE_URL . '/admin/js/config.js',
-				array(
-					'jquery',
-					'jquery-ui-core',
-					'jquery-ui-tabs',
-					'jquery-ui-progressbar',
-					'jquery-ui-tooltip',
-				),
+				array( 'jquery' ),
 				Core::VERSION
 			);
 		}
 
-		// Enqueue scripts and styles for the post edit screen.
+		// Enqueue scripts for the post edit screen.
 		if ( 'post.php' === $hook ) {
-
-			// Enqueue the meta box style.
-			wp_enqueue_style(
-				'optimizely_admin_metabox_style',
-				OPTIMIZELY_X_BASE_URL . '/public/css/metabox.css',
-				array(),
-				Core::VERSION
-			);
 
 			// Enqueue the meta box script.
 			wp_enqueue_script(

@@ -8,7 +8,7 @@
 
 ?>
 
-<div class="wrap optimizely_admin">
+<div class="wrap optimizely-admin">
 	<h1><?php esc_html_e( 'Optimizely', 'optimizely-x' ); ?></h1>
 	<?php settings_errors(); ?>
 	<div class="card">
