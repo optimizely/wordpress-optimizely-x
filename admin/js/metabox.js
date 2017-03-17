@@ -1,114 +1,177 @@
-(function( $ ) {
-	'use strict';
+(
+	function ( $, window, document, undefined ) {
+		'use strict';
 
-	var optimizelyError = function(error){
-		$('#optimizely_error_message').html(error);
-		$('#optimizely_error_box').show();
-	}
+		// Define an object to encapsulate metabox functionality.
+		var OptimizelyMetabox = {
 
-	$("#optimizely_create").click(function(){
-		var variations = [];
-		var error = [];
-	  $(".optimizely_variation").each(function(i,e){
-			var value = $(e).val();
-			if(value === ''){
-				error.push("Variation #" + (i + 1) + " doesn't have a title set.")
-			}
-	    variations.push($(e).val());
-	  });
-		if(error.length > 0){
-			optimizelyError(error.join('<br>'));
-		} else {
-			createExperiment(variations);
-		}
-	});
+			/**
+			 * A click handler for the change status button.
+			 */
+			changeStatus: function () {
+				var $experiment = $( '#optimizely-experiment-container' );
 
+				// Show the loading indicator and hide the experiment status.
+				$( '.optimizely-loading' ).removeClass( 'hidden' );
+				$( '.optimizely-running-experiment' ).addClass( 'hidden' );
 
+				// Send the AJAX request to change the experiment status.
+				$.ajax( {
+					url: ajaxurl,
+					data: {
+						action: 'optimizely_x_change_status',
+						status: $experiment.attr( 'data-optimizely-experiment-status' ),
+						entity_id: $experiment.attr( 'data-optimizely-entity-id' )
+					},
+					method: 'POST'
+				} ).done( function ( data, b, xhr ) {
 
-	var changeStatus = function(){
-		$(".optimizely_loading").removeClass('hidden');
-		$('.optimizely_running_experiment').addClass('hidden');
+					// Hide the loading animation and show the status.
+					$( '.optimizely-loading' ).addClass( 'hidden' );
+					$( '.optimizely-running-experiment' ).removeClass( 'hidden' );
 
-		var data = {
-			'action': 'optimizely_x_change_status',
-			'status': window.optimizelyIntegration.status,
-			'entity_id': window.optimizelyIntegration.entity_id
-		};
-		// since 2.8 ajaxurl is always defined in the admin header and points to admin-ajax.php
-		jQuery.ajax({
-			url: ajaxurl,
-			data: data,
-			method: 'POST'
-		}).done(function(data,b,xhr) {
-			try {
-				data = JSON.parse(data);
-			} catch (ex) {
+					// Try to decode the response.
+					try {
+						data = JSON.parse( data );
+					} catch ( ex ) {
+						OptimizelyMetabox.showError( optimizely_metabox_strings.status_error );
+						return;
+					}
 
-			}
-			if(xhr.status === 200 && data.status === 'SUCCESS'){
-				window.optimizelyIntegration.status = data.json.status;
-				$("#optimizely_experiment_status_text").html(window.optimizelyIntegration.status);
-				if(data.json.status == 'paused') {
-				  $("#optimizely_toggle_running").text('Start Experiment');
-				} else {
-					$("#optimizely_toggle_running").text('Pause Experiment');
+					// Handle error state.
+					if ( 200 !== xhr.status || 'SUCCESS' !== data.status ) {
+						OptimizelyMetabox.showError( optimizely_metabox_strings.status_error );
+						return;
+					}
+
+					// Update state.
+					$( '#optimizely-experiment-container' ).attr(
+						'data-optimizely-experiment-status',
+						data.experiment_status
+					);
+					$( '#optimizely-experiment-status-text' ).text( data.experiment_status );
+					if ( 'paused' === data.experiment_status ) {
+						$( '.optimizely-toggle-running-pause' ).addClass( 'hidden' );
+						$( '.optimizely-toggle-running-start' ).removeClass( 'hidden' );
+					} else {
+						$( '.optimizely-toggle-running-pause' ).removeClass( 'hidden' );
+						$( '.optimizely-toggle-running-start' ).addClass( 'hidden' );
+					}
+				} );
+			},
+
+			/**
+			 * Clears an error message, if one exists.
+			 */
+			clearError: function () {
+				$( '#optimizely-metabox-error' ).remove();
+			},
+
+			/**
+			 * A click handler for the create experiment button.
+			 */
+			createExperiment: function () {
+				var errors = [],
+					variations = [];
+
+				// Loop through variations and add to the array.
+				$( '.optimizely-variation input[type="text"]' ).each( function ( i, e ) {
+					var value = $( e ).val();
+
+					// Check for blank titles.
+					if ( '' === value ) {
+						errors.push( optimizely_metabox_strings.no_title.replace( '%d', (
+						i + 1
+						) ) );
+						return;
+					}
+
+					// Store the variation value in the consolidated array.
+					variations.push( value );
+				} );
+
+				// Handle validation errors.
+				if ( errors.length > 0 ) {
+					OptimizelyMetabox.showError( errors.join( "\n" ) );
+					return;
 				}
-			} else {
-				$(".optimizely_loading").addClass('hidden');
-				$(".optimizely_new_experiment").removeClass('hidden');
-				console.error("An error occurred during the pausing of the Optimizely experiment:", data)
+
+				// Swap the new experiment block for the loading block.
+				$( '.optimizely-loading' ).removeClass( 'hidden' );
+				$( '.optimizely-new-experiment' ).addClass( 'hidden' );
+
+				// Send the variation data via AJAX.
+				$.ajax( {
+					url: ajaxurl,
+					data: {
+						action: 'optimizely_x_create_experiment',
+						variations: JSON.stringify( variations ),
+						entity_id: $( '#optimizely-experiment-container' ).attr( 'data-optimizely-entity-id' )
+					},
+					method: 'POST'
+				} ).done( function ( data, b, xhr ) {
+					var $runningExperiment = $( '.optimizely-running-experiment' );
+
+					// Hide the loading animation.
+					$( '.optimizely-loading' ).addClass( 'hidden' );
+
+					// Try to decode the response.
+					try {
+						data = JSON.parse( data );
+					} catch ( ex ) {
+						OptimizelyMetabox.showError( optimizely_metabox_strings.experiment_error );
+						return;
+					}
+
+					// Handle error state.
+					if ( 200 !== xhr.status || 'SUCCESS' !== data.status ) {
+						OptimizelyMetabox.showError( optimizely_metabox_strings.experiment_error );
+						$( '.optimizely-new-experiment' ).removeClass( 'hidden' );
+						return;
+					}
+
+					// Show the experiment status box and update values.
+					$runningExperiment.removeClass( 'hidden' );
+					$( '.optimizely-view-link' ).attr( 'href', data.editor_link );
+					$( '#optimizely-experiment-id' ).text( data.experiment_id );
+					$( '#optimizely-experiment-container' ).attr( 'data-optimizely-experiment-status', 'paused' );
+					$( '#optimizely-experiment-status-text' ).text( 'paused' );
+					$( '.optimizely-variation-title' ).each( function ( i, e ) {
+						$( e ).text( variations[i] );
+					} );
+				} );
+			},
+
+			/**
+			 * Initializes the functionality of the Optimizely metabox.
+			 */
+			init: function () {
+				$( '#optimizely-create' ).on( 'click', this.createExperiment );
+				$( '#optimizely-created' ).on( 'click', '.optimizely-toggle-running', this.changeStatus );
+			},
+
+			/**
+			 * Displays the provided error message.
+			 *
+			 * @param {string} message The message to display.
+			 */
+			showError: function ( message ) {
+				var $error = $( '<div id="optimizely-metabox-error">' ),
+					$experiment = $( '#optimizely-experiment-container' );
+
+				// Clear existing error messages, if any.
+				this.clearError();
+
+				// Build the error message and add it to the metabox.
+				$error.addClass( 'optimizely-error-message' );
+				$error.text( message );
+				$experiment.prepend( $error );
 			}
-			$(".optimizely_loading").addClass('hidden');
-			$('.optimizely_running_experiment').removeClass('hidden');
-		});
-	}
-
-	$('#optimizely_toggle_running').click(changeStatus);
-
-	var updateRunning = function(data, variations){
-		$('#optimizely_view').attr('href', data.editor_link);
-		$(".optimizely_loading").addClass('hidden');
-		$('.optimizely_running_experiment').removeClass('hidden');
-		$("#optimizely_experiment_id").html(data.experiment_id);
-		window.optimizelyIntegration.status = 'paused';
-		$("#optimizely_experiment_status_text").html(window.optimizelyIntegration.status);
-
-		$(".optimizely_variation_title").each(function(i,e){
-			$(e).text(variations[i]);
-		});
-
-
-	};
-
-	var createExperiment = function(variations){
-		$(".optimizely_loading").removeClass('hidden');
-		$(".optimizely_new_experiment").addClass('hidden');
-
-		var data = {
-	  	'action': 'optimizely_x_create_experiment',
-	  	'variations': JSON.stringify(variations),
-			'entity_id': window.optimizelyIntegration.entity_id
 		};
-		// since 2.8 ajaxurl is always defined in the admin header and points to admin-ajax.php
-		jQuery.ajax({
-		  url: ajaxurl,
-		  data: data,
-		  method: 'POST'
-		}).done(function(data, b, xhr) {
-			try {
-				data = JSON.parse(data);
-			} catch (ex) {
 
-			}
-			if(xhr.status === 200 && data.status === 'SUCCESS'){
-				updateRunning(data, variations);
-			} else {
-				optimizelyError("An error occurred during the creation of the Optimizely experiment.");
-				$(".optimizely_loading").addClass('hidden');
-				$(".optimizely_new_experiment").removeClass('hidden');
-				console.error("An error occurred during the creation of the Optimizely experiment:", data)
-			}
-		});
-	};
-
-})( jQuery );
+		// Initialize the metabox when ready.
+		$( document ).ready( function () {
+			OptimizelyMetabox.init();
+		} );
+	}
+)( jQuery, window, document );

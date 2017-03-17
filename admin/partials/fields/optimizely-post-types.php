@@ -22,7 +22,8 @@ if ( empty( $selected_post_types ) || ! is_array( $selected_post_types ) ) {
 	<?php foreach ( $post_types as $post_type ) : ?>
 		<div>
 			<label for="optimizely-post-types-<?php echo esc_attr( $post_type->name ); ?>">
-				<input id="optimizely-post-types-<?php echo esc_attr( $post_type->name ); ?>"
+				<input class="optimizely-requires-authentication"
+					id="optimizely-post-types-<?php echo esc_attr( $post_type->name ); ?>"
 					name="optimizely_post_types[]"
 					type="checkbox"
 					value="<?php echo esc_attr( $post_type->name ); ?>"

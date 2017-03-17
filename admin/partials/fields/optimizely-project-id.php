@@ -9,7 +9,10 @@
 ?>
 
 <div>
-	<select id="optimizely-project-id" name="optimizely_project_id">
+	<select class="optimizely-requires-authentication"
+		id="optimizely-project-id"
+		name="optimizely_project_id"
+	>
 		<?php $project_id = absint( get_option( 'optimizely_project_id' ) ); ?>
 		<?php if ( ! empty( $project_id ) ) : ?>
 			<option value=""><?php esc_html_e( 'Disable Optimizely', 'optimizely-x' ); ?></option>
@@ -21,6 +24,6 @@
 		<?php endif; ?>
 	</select>
 </div>
-<div id="optimizely-project-code">
+<div id="optimizely-project-code" class="hidden">
 	<p class="description"><?php esc_html_e( 'Optimizely will add the following project code to your page automatically:', 'optimizely-x' ); ?></p>
 </div>

@@ -15,7 +15,7 @@ if ( empty( $conditional_activation_code ) ) {
 ?>
 
 <div>
-	<textarea class="code"
+	<textarea class="code optimizely-requires-authentication"
 		id="optimizely-conditional-activation-code"
 		name="optimizely_conditional_activation_code"
 		rows="5"

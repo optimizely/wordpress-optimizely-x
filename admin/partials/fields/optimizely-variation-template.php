@@ -15,7 +15,7 @@ if ( empty( $variation_template ) ) {
 ?>
 
 <div>
-	<textarea class="code"
+	<textarea class="code optimizely-requires-authentication"
 		id="optimizely-variation-template"
 		name="optimizely_variation_template"
 		rows="5"

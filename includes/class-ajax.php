@@ -75,9 +75,9 @@ class AJAX {
 			$this->send_error_response( 404, 'ERROR' );
 		}
 
-		// Build API request path.
-		$action = ( 'paused' === $status ) ? 'publish_start' : 'pause';
-		$operation = '/experiments/' . $experiment_id . '/?action=' . $action;
+		// Build API request URL.
+		$action = ( 'paused' === $status ) ? 'start' : 'pause';
+		$operation = '/experiments/' . $experiment_id . '?action=' . $action;
 
 		// Process the request and check for errors.
 		$response = $this->api->patch( $operation );
@@ -88,10 +88,18 @@ class AJAX {
 			$this->send_error_response( 400, 'ERROR' );
 		}
 
+		// Update the status in postmeta.
+		update_post_meta(
+			$post_id,
+			'optimizely_experiment_status',
+			sanitize_text_field( $response['json']['status'] )
+		);
+
 		// Return the status in the AJAX response.
 		echo wp_json_encode(
 			array(
-				'status' => sanitize_text_field( $response['json']['status'] ),
+				'experiment_status' => sanitize_text_field( $response['json']['status'] ),
+				'status' => 'SUCCESS',
 			)
 		);
 		wp_die();
@@ -211,7 +219,7 @@ class AJAX {
 		add_post_meta(
 			$post->ID,
 			'optimizely_experiment_status',
-			'paused'
+			'not_started'
 		);
 
 		// Store the number of variations in postmeta.

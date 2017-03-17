@@ -14,13 +14,14 @@ if ( empty( $activation_mode ) ) {
 
 ?>
 
-<fieldset>
+<fieldset id="optimizely-activation-mode">
 	<legend class="screen-reader-text">
 		<span><?php esc_html_e( 'Activation Mode', 'optimizely-x' ); ?></span>
 	</legend>
 	<div>
 		<label for="optimizely-activation-mode-immediate">
-			<input id="optimizely-activation-mode-immediate"
+			<input class="optimizely-requires-authentication"
+				id="optimizely-activation-mode-immediate"
 				name="optimizely_activation_mode"
 				type="radio"
 				value="immediate"
@@ -31,7 +32,8 @@ if ( empty( $activation_mode ) ) {
 	</div>
 	<div>
 		<label for="optimizely-activation-mode-conditional">
-			<input id="optimizely-activation-mode-conditional"
+			<input class="optimizely-requires-authentication"
+				id="optimizely-activation-mode-conditional"
 				name="optimizely_activation_mode"
 				type="radio"
 				value="conditional"

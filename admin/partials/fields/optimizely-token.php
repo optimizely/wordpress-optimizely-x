@@ -6,6 +6,10 @@
  * @since 1.0.0
  */
 
+$token = get_option( 'optimizely_token' );
+if ( ! empty( $token ) ) {
+	$token = hash( 'ripemd160', $token );
+}
 ?>
 
 <div>
@@ -13,7 +17,7 @@
 		name="optimizely_token"
 		type="password"
 		maxlength="80"
-		value="<?php echo esc_attr( hash('ripemd160', get_option( 'optimizely_token' ) ) ); ?>" class="code"
+		value="<?php echo esc_attr( $token ); ?>" class="code"
 	/>
 </div>
 <p class="description">

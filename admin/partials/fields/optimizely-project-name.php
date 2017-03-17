@@ -9,9 +9,10 @@
 ?>
 
 <div>
-	<input type="hidden"
+	<input class="optimizely-field-hidden"
 		id="optimizely-project-name"
 		name="optimizely_project_name"
+		type="hidden"
 		value="<?php echo esc_attr( get_option( 'optimizely_project_name' ) ); ?>"
 	/>
 </div>

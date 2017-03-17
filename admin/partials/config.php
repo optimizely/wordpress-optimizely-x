@@ -33,9 +33,16 @@
 			); ?>
 		</p>
 	</div>
-	<form method="post" action="options.php">
+	<form id="optimizely-config" method="post" action="options.php">
 		<?php settings_fields( 'optimizely_config_section' ); ?>
 		<?php do_settings_sections( 'optimizely_config_options' ); ?>
+		<div class="optimizely-loading hidden">
+			<p><?php esc_html_e( 'Loading your configuration ...', 'optimizely-x' ); ?></p>
+			<img src="<?php echo esc_url( OPTIMIZELY_X_BASE_URL . '/admin/images/ajax-loader.gif' ); ?>" />
+		</div>
+		<div class="optimizely-error-message optimizely-invalid-token hidden">
+			<?php esc_html_e( 'A request with the Personal Token that you have previously saved failed. Either submit a new token or reload the page to try again.', 'optimizely-x' ); ?>
+		</div>
 		<?php submit_button(); ?>
 	</form>
 </div>

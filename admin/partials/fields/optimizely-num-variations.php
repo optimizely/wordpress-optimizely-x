@@ -15,7 +15,8 @@ if ( empty( $num_variations ) ) {
 ?>
 
 <div>
-	<input id="optimizely-num-variations"
+	<input class="optimizely-requires-authentication"
+		id="optimizely-num-variations"
 		maxlength="1"
 		name="optimizely_num_variations"
 		type="number"

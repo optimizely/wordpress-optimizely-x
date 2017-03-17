@@ -23,7 +23,10 @@ $url_types = array(
 ?>
 
 <div>
-	<select id="optimizely-url-targeting-type" name="optimizely_url_targeting_type">
+	<select class="optimizely-requires-authentication"
+		id="optimizely-url-targeting-type"
+		name="optimizely_url_targeting_type"
+	>
 		<?php foreach ( $url_types as $type => $label ) : ?>
 			<option value="<?php echo esc_attr( $type ); ?>" <?php selected( $type, $url_targeting_type ); ?>>
 				<?php echo esc_html( $label ); ?>

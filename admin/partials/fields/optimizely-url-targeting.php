@@ -15,7 +15,8 @@ if ( empty( $url_targeting ) ) {
 ?>
 
 <div>
-	<input id="optimizely-url-targeting"
+	<input class="optimizely-requires-authentication"
+		id="optimizely-url-targeting"
 		name="optimizely_url_targeting"
 		type="text"
 		value="<?php echo esc_attr( $url_targeting );  ?>"

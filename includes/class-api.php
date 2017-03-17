@@ -70,11 +70,28 @@ class API {
 		// Request data, one page at a time, until all data is delivered.
 		do {
 
-			// Get the API response for the operation and add it to our response.
+			// Get the API response for the operation.
 			$raw_response = $this->request( 'GET', $operation, $data );
-			$response['code'] = absint( $raw_response['code'] );
-			$response['headers'] = sanitize_text_field( $raw_response['headers'] );
-			$response['status'] = sanitize_text_field( $raw_response['status'] );
+
+			// Add the response code.
+			if ( ! empty( $raw_response['code'] ) ) {
+				$response['code'] = absint( $raw_response['code'] );
+			}
+
+			// Add the response headers.
+			if ( ! empty( $raw_response['headers']['data'] )
+				&& is_array( $raw_response['headers']['data'] )
+			) {
+				$response['headers'] = array_map(
+					'sanitize_text_field',
+					$raw_response['headers']['data']
+				);
+			}
+
+			// Add the response status.
+			if ( ! empty( $raw_response['status'] ) ) {
+				$response['status'] = sanitize_text_field( $raw_response['status'] );
+			}
 
 			// Combine the data from the raw response with the compiled data.
 			if ( ! empty( $raw_response['json'] )
@@ -87,8 +104,8 @@ class API {
 			}
 
 			// Negotiate next link.
-			$next_link = ( ! empty( $raw_response['headers']['LINK'] ) )
-				? $this->get_next_link( $raw_response['headers']['LINK'] )
+			$next_link = ( ! empty( $response['headers']['LINK'] ) )
+				? $this->get_next_link( $response['headers']['LINK'] )
 				: '';
 		} while ( ! empty( $next_link ) );
 
@@ -282,6 +299,9 @@ class API {
 		) {
 			$result['status'] = 'ERROR';
 		}
+
+		// Add success status to response.
+		$result['status'] = 'SUCCESS';
 
 		return $result;
 	}

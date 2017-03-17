@@ -60,9 +60,12 @@ JAVASCRIPT;
 	 * @return bool True if all settings are set, false if not.
 	 */
 	public static function is_initialized() {
-		return ( false !== get_option( 'optimizely_token' )
-			&& 0 !== absint( get_option( 'optimizely_project_id' ) )
-		);
+
+		// Try to get the token and the project ID.
+		$token = get_option( 'optimizely_token' );
+		$project_id = absint( get_option( 'optimizely_project_id' ) );
+
+		return ( ! empty( $token ) && ! empty( $project_id ) );
 	}
 
 	/**
@@ -267,15 +270,17 @@ JAVASCRIPT;
 				'optimizely_beautify_js',
 				OPTIMIZELY_X_BASE_URL . '/admin/js/beautify.min.js',
 				array(),
-				Core::VERSION
+				Core::VERSION,
+				true
 			);
 
 			// Enqueue main admin configuration script.
 			wp_enqueue_script(
 				'optimizely_admin_config_script',
 				OPTIMIZELY_X_BASE_URL . '/admin/js/config.js',
-				array( 'jquery' ),
-				Core::VERSION
+				array( 'jquery', 'optimizely_beautify_js' ),
+				Core::VERSION,
+				true
 			);
 		}
 
@@ -285,9 +290,30 @@ JAVASCRIPT;
 			// Enqueue the meta box script.
 			wp_enqueue_script(
 				'optimizely_admin_metabox_script',
-				OPTIMIZELY_X_BASE_URL . '/public/js/metabox.js',
+				OPTIMIZELY_X_BASE_URL . '/admin/js/metabox.js',
 				array( 'jquery' ),
-				Core::VERSION
+				Core::VERSION,
+				true
+			);
+
+			// Localize the metabox script.
+			wp_localize_script(
+				'optimizely_admin_metabox_script',
+				'optimizely_metabox_strings',
+				array(
+					'experiment_error' => __(
+						'An error occurred during the creation of the Optimizely experiment.',
+						'optimizely-x'
+					),
+					'no_title' => __(
+						'Variation #%d does not have a title set.',
+						'optimizely-x'
+					),
+					'status_error' => __(
+						'An error occurred while trying to change the experiment status.',
+						'optimizely-x'
+					),
+				)
 			);
 		}
 	}
@@ -463,9 +489,6 @@ JAVASCRIPT;
 	 */
 	public function metabox_headlines_render( $post ) {
 
-		// Add loading container for display until API calls complete.
-		Partials::load( 'admin', 'metabox/loading' );
-
 		// Handle unauthenticated state.
 		if ( false === self::is_initialized() ) {
 			Partials::load( 'admin', 'metabox/unauthenticated' );
@@ -480,14 +503,8 @@ JAVASCRIPT;
 			return;
 		}
 
-		// Determine whether to include new state.
-		$experiment_id = get_post_meta( $post->ID, 'optimizely_experiment_id', true );
-		if ( empty( $experiment_id ) ) {
-			Partials::load( 'admin', 'metabox/new' );
-		}
-
-		// Load running state.
-		Partials::load( 'admin', 'metabox/running' );
+		// Load primary metabox patial.
+		Partials::load( 'admin', 'metabox' );
 	}
 
 	/**
@@ -589,7 +606,7 @@ JAVASCRIPT;
 	private function is_post_type_enabled( $post_type ) {
 
 		// Convert selected post types to an array.
-		$selected_post_types = explode( ',', get_option( 'optimizely_post_types' ) );
+		$selected_post_types = get_option( 'optimizely_post_types', array() );
 
 		return ( is_array( $selected_post_types )
 			&& in_array( $post_type, $selected_post_types, true )
