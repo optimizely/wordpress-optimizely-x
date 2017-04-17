@@ -41,7 +41,7 @@ class API {
 	 * @access public
 	 * @return array The API response data.
 	 */
-	public function delete( $operation, $data ) {
+	public function delete( $operation, $data = array() ) {
 		return $this->request( 'DELETE', $operation, $data );
 	}
 
@@ -122,7 +122,7 @@ class API {
 	 * @access public
 	 * @return array The API response data.
 	 */
-	public function patch( $operation, $data ) {
+	public function patch( $operation, $data = array() ) {
 		return $this->request( 'PATCH', $operation, $data );
 	}
 
@@ -136,7 +136,7 @@ class API {
 	 * @access public
 	 * @return array The API response data.
 	 */
-	public function post( $operation, $data ) {
+	public function post( $operation, $data = array() ) {
 		return $this->request( 'POST', $operation, $data );
 	}
 
@@ -150,7 +150,7 @@ class API {
 	 * @access public
 	 * @return array The API response data.
 	 */
-	public function put( $operation, $data ) {
+	public function put( $operation, $data = array() ) {
 		return $this->request( 'PUT', $operation, $data );
 	}
 
