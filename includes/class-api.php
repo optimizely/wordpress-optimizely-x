@@ -224,13 +224,17 @@ class API {
 			);
 		}
 
-		// Build request object.
+		// Add authentication header to the request object.
 		$request = array(
 			'headers' => array(
 				'Authorization' => 'Bearer ' . sanitize_text_field( $token ),
 			),
-			'body' => ( ! empty( $data ) ) ? wp_json_encode( $data ) : '{}',
 		);
+
+		// If the request method is POST or PATCH, add and encode the body.
+		if ( in_array( $method, array( 'POST', 'PATCH' ), true ) ) {
+			$request['body'] = ( ! empty( $data ) ) ? wp_json_encode( $data ) : '{}';
+		}
 
 		// Fork for request method.
 		switch ( $method ) {

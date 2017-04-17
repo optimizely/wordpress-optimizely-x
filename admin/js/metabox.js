@@ -11,6 +11,9 @@
 			changeStatus: function () {
 				var $experiment = $( '#optimizely-experiment-container' );
 
+				// Clear any existing errors before beginning.
+				OptimizelyMetabox.clearError();
+
 				// Show the loading indicator and hide the experiment status.
 				$( '.optimizely-loading' ).removeClass( 'hidden' );
 				$( '.optimizely-running-experiment' ).addClass( 'hidden' );
@@ -73,6 +76,9 @@
 			createExperiment: function () {
 				var errors = [],
 					variations = [];
+
+				// Clear any existing errors before beginning.
+				OptimizelyMetabox.clearError();
 
 				// Loop through variations and add to the array.
 				$( '.optimizely-variation input[type="text"]' ).each( function ( i, e ) {
