@@ -50,14 +50,6 @@ class Frontend {
 	 * @access public
 	 */
 	public function inject_script() {
-
-		// Ensure we have a project ID.
-		$project_id = absint( get_option( 'optimizely_project_id' ) );
-		if ( empty( $project_id ) ) {
-			return;
-		}
-
-		// Load the partial containing the script tag to be embedded.
 		Partials::load( 'public', 'head-js' );
 	}
 
