@@ -141,7 +141,7 @@
 					$( '.optimizely-view-link' ).attr( 'href', data.editor_link );
 					$( '#optimizely-experiment-id' ).text( data.experiment_id );
 					$( '#optimizely-experiment-container' ).attr( 'data-optimizely-experiment-status', 'paused' );
-					$( '#optimizely-experiment-status-text' ).text( 'paused' );
+					$( '#optimizely-experiment-status-text' ).text( 'not_started' );
 					$( '.optimizely-variation-title' ).each( function ( i, e ) {
 						$( e ).text( variations[i] );
 					} );
