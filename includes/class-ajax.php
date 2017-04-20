@@ -62,7 +62,11 @@ class AJAX {
 
 		// Check for error condition.
 		if ( empty( $_POST['entity_id'] ) || empty( $_POST['status'] ) ) {
-			$this->send_error_response( 403, 'ERROR' );
+			$this->send_error_response(
+				403,
+				'ERROR',
+				array( __( 'Missing entity_id or status value.', 'optimizely-x' ) )
+			);
 		}
 
 		// Sanitize postdata before proceeding.
@@ -72,7 +76,11 @@ class AJAX {
 		// Ensure we have an experiment ID before proceeding.
 		$experiment_id = get_post_meta( $post_id, 'optimizely_experiment_id', true );
 		if ( empty( $experiment_id ) ) {
-			$this->send_error_response( 404, 'ERROR' );
+			$this->send_error_response(
+				404,
+				'ERROR',
+				array( __( 'Missing experiment ID.', 'optimizely-x' ) )
+			);
 		}
 
 		// Build API request URL.
@@ -85,7 +93,13 @@ class AJAX {
 
 		// Ensure we got a status in the response.
 		if ( empty( $response['json']['status'] ) ) {
-			$this->send_error_response( 400, 'ERROR' );
+			$this->send_error_response(
+				400,
+				'ERROR',
+				array(
+					__( 'No status included in the API response.', 'optimizely-x' )
+				)
+			);
 		}
 
 		// Update the status in postmeta.
@@ -115,32 +129,52 @@ class AJAX {
 
 		// Check for error conditions.
 		if ( empty( $_POST['entity_id'] ) || empty( $_POST['variations'] ) ) {
-			$this->send_error_response( 403, 'ERROR' );
+			$this->send_error_response(
+				403,
+				'ERROR',
+				array( __( 'Missing entity_id or variations.', 'optimizely-x' ) )
+			);
 		}
 
 		// Ensure we have a project ID before proceeding.
 		$project_id = absint( get_option( 'optimizely_project_id' ) );
 		if ( empty( $project_id ) ) {
-			$this->send_error_response( 403, 'ERROR' );
+			$this->send_error_response(
+				403,
+				'ERROR',
+				array( __( 'Missing project ID.', 'optimizely-x' ) )
+			);
 		}
 
 		// Extract variations from the values sent from the metabox.
 		$variations = json_decode( wp_unslash( $_POST['variations'] ), true );
 		if ( empty( $variations ) || ! is_array( $variations ) ) {
-			$this->send_error_response( 403, 'ERROR' );
+			$this->send_error_response(
+				403,
+				'ERROR',
+				array( __( 'Missing or malformed variations.', 'optimizely-x' ) )
+			);
 		}
 
 		// Sanitize variations before proceeding.
 		$variations = array_map( 'sanitize_text_field', $variations );
 		$variations = array_filter( $variations );
 		if ( empty( $variations ) ) {
-			$this->send_error_response( 403, 'ERROR' );
+			$this->send_error_response(
+				403,
+				'ERROR',
+				array( __( 'Variations failed sanitization.', 'optimizely-x' ) )
+			);
 		}
 
 		// Try to get a post from the entity ID.
 		$post = get_post( absint( $_POST['entity_id'] ) );
 		if ( empty( $post ) ) {
-			$this->send_error_response( 403, 'ERROR' );
+			$this->send_error_response(
+				403,
+				'ERROR',
+				array( __( 'Failed to look up the post by ID.', 'optimizely-x' ) )
+			);
 		}
 
 		// Try to build a targeting page for this post.
@@ -181,7 +215,7 @@ class AJAX {
 			$targeting_id,
 			$event_id
 		);
-		if ( empty( $event_id ) ) {
+		if ( empty( $experiment_id ) ) {
 			$this->send_error_response(
 				403,
 				'ERROR',
@@ -264,7 +298,11 @@ class AJAX {
 
 		// Ensure there are results to loop over.
 		if ( empty( $response['json'] ) || ! is_array( $response['json'] ) ) {
-			$this->send_error_response( 400, 'ERROR' );
+			$this->send_error_response(
+				400,
+				'ERROR',
+				array( __( 'Failed to get a list of projects.', 'optimizely-x' ) )
+			);
 			wp_die();
 		}
 
