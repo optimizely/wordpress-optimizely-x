@@ -51,15 +51,15 @@
 			 */
 			init: function () {
 
-				// Set up initial view state.
-				this.setupInitialState();
-
 				// Beautify the textareas containing compressed JavaScript.
 				this.beautify( '#optimizely-conditional-activation-code' );
 				this.beautify( '#optimizely-variation-template' );
 
 				// Set up listeners for form value changes.
 				this.setupConditionalActivation();
+
+				// Set up initial view state.
+				this.setupInitialState();
 
 				// Load the project list using the API.
 				this.loadProjects();
