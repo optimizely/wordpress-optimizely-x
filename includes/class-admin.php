@@ -35,8 +35,12 @@ JAVASCRIPT;
 	 */
 	const DEFAULT_VARIATION_TEMPLATE = <<<JAVASCRIPT
 var utils = window['optimizely'].get('utils');
-utils.waitForElement( '.post-\$POST_ID h1, .post-\$POST_ID h2, .post-\$POST_ID h3' ).then( function () {
-    var element = document.querySelector( '.post-\$POST_ID h1, .post-\$POST_ID h2, .post-\$POST_ID h3' );
+utils.waitForElement( '.post-\$POST_ID h1' ).then( function () {
+    var element = document.querySelector( '.post-\$POST_ID h1' );
+    element.innerHTML = '\$NEW_TITLE';
+} );
+utils.waitForElement( '.post-\$POST_ID h3 a' ).then( function () {
+    var element = document.querySelector( '.post-\$POST_ID h3 a' );
     element.innerHTML = '\$NEW_TITLE';
 } );
 JAVASCRIPT;
