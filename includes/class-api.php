@@ -68,7 +68,14 @@ class API {
 		);
 
 		// Request data, one page at a time, until all data is delivered.
+		$next_link = '';
 		do {
+
+			// Handle next link.
+			if ( ! empty( $next_link ) ) {
+				$operation = $next_link;
+				$data = array();
+			}
 
 			// Get the API response for the operation.
 			$raw_response = $this->request( 'GET', $operation, $data );
@@ -79,13 +86,8 @@ class API {
 			}
 
 			// Add the response headers.
-			if ( ! empty( $raw_response['headers']['data'] )
-				&& is_array( $raw_response['headers']['data'] )
-			) {
-				$response['headers'] = array_map(
-					'sanitize_text_field',
-					$raw_response['headers']['data']
-				);
+			if ( ! empty( $raw_response['headers'] ) ) {
+				$response['headers'] = $raw_response['headers']->getAll();
 			}
 
 			// Add the response status.
@@ -104,8 +106,8 @@ class API {
 			}
 
 			// Negotiate next link.
-			$next_link = ( ! empty( $response['headers']['LINK'] ) )
-				? $this->get_next_link( $response['headers']['LINK'] )
+			$next_link = ( ! empty( $response['headers']['link'] ) )
+				? $this->get_next_link( $response['headers']['link'] )
 				: '';
 		} while ( ! empty( $next_link ) );
 
@@ -165,19 +167,13 @@ class API {
 	 */
 	private function get_next_link( $header ) {
 
-		// Loop through provided links in the header to search for the 'next' link.
-		$links = explode( ', ', $header );
-		foreach ( $links as $link ) {
-			if ( preg_match( '/<(https:\/\/[^>]*)>; rel=(\w+)/', $link, $matches )
-				&& ! empty( $matches[1][0] )
-				&& ! empty( $matches[2][0] )
-				&& 'next' === $matches[2][0]
-			) {
-				return $matches[1][0];
-			}
+		// Try to match a next link.
+		$regex = '/<' . preg_quote( self::BASE_URL, '/' ) . '([^>]+)>; rel=next/';
+		if ( ! preg_match( $regex, $header, $matches ) ) {
+			return '';
 		}
 
-		return '';
+		return $matches[1];
 	}
 
 	/**
@@ -231,9 +227,11 @@ class API {
 			),
 		);
 
-		// If the request method is POST or PATCH, add and encode the body.
+		// Encode data in body or query depending on request method.
 		if ( in_array( $method, array( 'POST', 'PATCH' ), true ) ) {
 			$request['body'] = ( ! empty( $data ) ) ? wp_json_encode( $data ) : '{}';
+		} elseif ( ! empty( $data ) ) {
+			$url .= '?' . http_build_query( $data );
 		}
 
 		// Fork for request method.
