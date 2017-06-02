@@ -60,6 +60,20 @@ class AJAX {
 	 */
 	public function change_status() {
 
+		// Validate nonce.
+		if ( ! check_ajax_referer( 'optimizely-metabox', 'nonce', false ) ) {
+			$this->send_error_response(
+				403,
+				'ERROR',
+				array(
+					__(
+						'An error has occurred. Please try reloading the page.',
+						'optimizely-x'
+					),
+				)
+			);
+		}
+
 		// Check for error condition.
 		if ( empty( $_POST['entity_id'] ) || empty( $_POST['status'] ) ) {
 			$this->send_error_response(
@@ -84,7 +98,7 @@ class AJAX {
 		}
 
 		// Build API request URL.
-		$action = ( 'paused' === $status ) ? 'start' : 'pause';
+		$action = ( 'paused' === $status || 'not_started' === $status ) ? 'start' : 'pause';
 		$operation = '/experiments/' . $experiment_id . '?action=' . $action;
 
 		// Process the request and check for errors.
@@ -126,6 +140,20 @@ class AJAX {
 	 * @access public
 	 */
 	public function create_experiment() {
+
+		// Validate nonce.
+		if ( ! check_ajax_referer( 'optimizely-metabox', 'nonce', false ) ) {
+			$this->send_error_response(
+				403,
+				'ERROR',
+				array(
+					__(
+						'An error has occurred. Please try reloading the page.',
+						'optimizely-x'
+					),
+				)
+			);
+		}
 
 		// Check for error conditions.
 		if ( empty( $_POST['entity_id'] ) || empty( $_POST['variations'] ) ) {

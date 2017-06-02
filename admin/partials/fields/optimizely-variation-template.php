@@ -19,7 +19,7 @@ if ( empty( $variation_template ) ) {
 		id="optimizely-variation-template"
 		name="optimizely_variation_template"
 		rows="5"
-	><?php echo esc_html( $variation_template ); ?></textarea>
+	><?php echo esc_textarea( $variation_template ); ?></textarea>
 </div>
 <p class="description">
 	<?php esc_html_e( 'You can use the variables $POST_ID, $OLD_TITLE, and $NEW_TITLE in your code.', 'optimizely-x' ); ?>

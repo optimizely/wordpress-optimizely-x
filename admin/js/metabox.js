@@ -23,6 +23,7 @@
 					url: ajaxurl,
 					data: {
 						action: 'optimizely_x_change_status',
+						nonce: optimizely_metabox_nonce.nonce,
 						status: $experiment.attr( 'data-optimizely-experiment-status' ),
 						entity_id: $experiment.attr( 'data-optimizely-entity-id' )
 					},
@@ -111,6 +112,7 @@
 					url: ajaxurl,
 					data: {
 						action: 'optimizely_x_create_experiment',
+						nonce: optimizely_metabox_nonce.nonce,
 						variations: JSON.stringify( variations ),
 						entity_id: $( '#optimizely-experiment-container' ).attr( 'data-optimizely-entity-id' )
 					},

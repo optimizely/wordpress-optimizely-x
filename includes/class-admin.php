@@ -116,8 +116,8 @@ JAVASCRIPT;
 	 */
 	public function add_menu_page() {
 		add_menu_page(
-			__( 'Optimizely', 'optimizely-x' ),
-			__( 'Optimizely', 'optimizely-x' ),
+			esc_html__( 'Optimizely', 'optimizely-x' ),
+			esc_html__( 'Optimizely', 'optimizely-x' ),
 			Filters::admin_capability(),
 			'optimizely-config',
 			array( $this, 'render_page_config' ),
@@ -141,7 +141,7 @@ JAVASCRIPT;
 		// Add the meta box.
 		add_meta_box(
 			'optimizely-headlines',
-			esc_attr__( 'A/B Test Headlines', 'optimizely-x' ),
+			esc_html__( 'A/B Test Headlines', 'optimizely-x' ),
 			array( $this, 'metabox_headlines_render' ),
 			get_post_type(),
 			'side',
@@ -204,7 +204,7 @@ JAVASCRIPT;
 		// Register the config section.
 		add_settings_section(
 			'optimizely_config_section',
-			__( 'Optimizely Configuration', 'optimizely-x' ),
+			esc_html__( 'Optimizely Configuration', 'optimizely-x' ),
 			null,
 			'optimizely_config_options'
 		);
@@ -317,6 +317,15 @@ JAVASCRIPT;
 						'An error occurred while trying to change the experiment status.',
 						'optimizely-x'
 					),
+				)
+			);
+
+			// Create a nonce for use in AJAX requests.
+			wp_localize_script(
+				'optimizely_admin_metabox_script',
+				'optimizely_metabox_nonce',
+				array(
+					'nonce' => wp_create_nonce( 'optimizely-metabox' ),
 				)
 			);
 		}
