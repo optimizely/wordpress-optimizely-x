@@ -28,22 +28,14 @@
 						entity_id: $experiment.attr( 'data-optimizely-entity-id' )
 					},
 					method: 'POST'
-				} ).done( function ( data, b, xhr ) {
+				} ).done( function ( response ) {
 
 					// Hide the loading animation and show the status.
 					$( '.optimizely-loading' ).addClass( 'hidden' );
 					$( '.optimizely-running-experiment' ).removeClass( 'hidden' );
 
-					// Try to decode the response.
-					try {
-						data = JSON.parse( data );
-					} catch ( ex ) {
-						OptimizelyMetabox.showError( optimizely_metabox_strings.status_error );
-						return;
-					}
-
 					// Handle error state.
-					if ( 200 !== xhr.status || 'SUCCESS' !== data.status ) {
+					if ( ! response.success ) {
 						OptimizelyMetabox.showError( optimizely_metabox_strings.status_error );
 						return;
 					}
@@ -51,10 +43,12 @@
 					// Update state.
 					$( '#optimizely-experiment-container' ).attr(
 						'data-optimizely-experiment-status',
-						data.experiment_status
+						response.data.experiment_status
 					);
-					$( '#optimizely-experiment-status-text' ).text( data.experiment_status );
-					if ( 'paused' === data.experiment_status ) {
+					$( '#optimizely-experiment-status-text' ).text(
+						response.data.experiment_status
+					);
+					if ( 'paused' === response.data.experiment_status ) {
 						$( '.optimizely-toggle-running-pause' ).addClass( 'hidden' );
 						$( '.optimizely-toggle-running-start' ).removeClass( 'hidden' );
 					} else {
@@ -117,22 +111,14 @@
 						entity_id: $( '#optimizely-experiment-container' ).attr( 'data-optimizely-entity-id' )
 					},
 					method: 'POST'
-				} ).done( function ( data, b, xhr ) {
+				} ).done( function ( response ) {
 					var $runningExperiment = $( '.optimizely-running-experiment' );
 
 					// Hide the loading animation.
 					$( '.optimizely-loading' ).addClass( 'hidden' );
 
-					// Try to decode the response.
-					try {
-						data = JSON.parse( data );
-					} catch ( ex ) {
-						OptimizelyMetabox.showError( optimizely_metabox_strings.experiment_error );
-						return;
-					}
-
 					// Handle error state.
-					if ( 200 !== xhr.status || 'SUCCESS' !== data.status ) {
+					if ( ! response.success ) {
 						OptimizelyMetabox.showError( optimizely_metabox_strings.experiment_error );
 						$( '.optimizely-new-experiment' ).removeClass( 'hidden' );
 						return;
@@ -140,8 +126,8 @@
 
 					// Show the experiment status box and update values.
 					$runningExperiment.removeClass( 'hidden' );
-					$( '.optimizely-view-link' ).attr( 'href', data.editor_link );
-					$( '#optimizely-experiment-id' ).text( data.experiment_id );
+					$( '.optimizely-view-link' ).attr( 'href', response.data.editor_link );
+					$( '#optimizely-experiment-id' ).text( response.data.experiment_id );
 					$( '#optimizely-experiment-container' ).attr( 'data-optimizely-experiment-status', 'paused' );
 					$( '#optimizely-experiment-status-text' ).text( 'not_started' );
 					$( '.optimizely-variation-title' ).each( function ( i, e ) {

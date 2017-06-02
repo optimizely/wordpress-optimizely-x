@@ -26,6 +26,7 @@ if ( empty( $variation_template ) ) {
 </p>
 <p class="description">
 	<?php printf(
+		/* translators: 1: opening <a> tag, 2: </a> */
 		esc_html__( 'Optimizely will use this variation code to change headlines on your site. We\'ve provided code that works if you have changed your headlines to have a class with the format optimizely-$POST_ID, but you might want to add or change it to work with your themes and plugins. For more information on how to update your HTML or write custom variation code, please read this %1$sknowledge base article%2$s.', 'optimizely-x' ),
 		'<a href="https://help.optimizely.com/Build_Campaigns_and_Experiments/Custom_code_in_Optimizely_X" target="_blank">',
 		'</a>'

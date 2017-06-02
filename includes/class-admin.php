@@ -101,7 +101,12 @@ JAVASCRIPT;
 	public static function supported_post_types() {
 
 		// Get a list of public post types minus pages and attachments.
-		$post_types = get_post_types( array( 'show_ui' => true ), 'objects' );
+		$post_types = get_post_types(
+			array(
+				'show_ui' => true,
+			),
+			'objects'
+		);
 		unset( $post_types['page'] );
 		unset( $post_types['attachment'] );
 
@@ -309,6 +314,7 @@ JAVASCRIPT;
 						'An error occurred during the creation of the Optimizely experiment.',
 						'optimizely-x'
 					),
+					/* translators: the variation number */
 					'no_title' => __(
 						'Variation #%d does not have a title set.',
 						'optimizely-x'
