@@ -273,7 +273,7 @@ class API {
 					),
 					'status' => 'ERROR',
 				);
-		}
+		} // End switch().
 
 		// Build result object.
 		$result = array(

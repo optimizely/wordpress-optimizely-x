@@ -60,13 +60,20 @@ class AJAX {
 	 */
 	public function change_status() {
 
+		// Validate nonce.
+		if ( ! check_ajax_referer( 'optimizely-metabox', 'nonce', false ) ) {
+			wp_send_json_error( __(
+				'Failed to validate the nonce',
+				'optimizely-x'
+			) );
+		}
+
 		// Check for error condition.
 		if ( empty( $_POST['entity_id'] ) || empty( $_POST['status'] ) ) {
-			$this->send_error_response(
-				403,
-				'ERROR',
-				array( __( 'Missing entity_id or status value.', 'optimizely-x' ) )
-			);
+			wp_send_json_error( __(
+				'Missing entity_id or status value.',
+				'optimizely-x'
+			) );
 		}
 
 		// Sanitize postdata before proceeding.
@@ -76,15 +83,11 @@ class AJAX {
 		// Ensure we have an experiment ID before proceeding.
 		$experiment_id = get_post_meta( $post_id, 'optimizely_experiment_id', true );
 		if ( empty( $experiment_id ) ) {
-			$this->send_error_response(
-				404,
-				'ERROR',
-				array( __( 'Missing experiment ID.', 'optimizely-x' ) )
-			);
+			wp_send_json_error( __( 'Missing experiment ID.', 'optimizely-x' ) );
 		}
 
 		// Build API request URL.
-		$action = ( 'paused' === $status ) ? 'start' : 'pause';
+		$action = ( 'paused' === $status || 'not_started' === $status ) ? 'start' : 'pause';
 		$operation = '/experiments/' . $experiment_id . '?action=' . $action;
 
 		// Process the request and check for errors.
@@ -93,13 +96,10 @@ class AJAX {
 
 		// Ensure we got a status in the response.
 		if ( empty( $response['json']['status'] ) ) {
-			$this->send_error_response(
-				400,
-				'ERROR',
-				array(
-					__( 'No status included in the API response.', 'optimizely-x' )
-				)
-			);
+			wp_send_json_error( __(
+				'No status included in the API response.',
+				'optimizely-x'
+			) );
 		}
 
 		// Update the status in postmeta.
@@ -110,101 +110,85 @@ class AJAX {
 		);
 
 		// Return the status in the AJAX response.
-		echo wp_json_encode(
-			array(
-				'experiment_status' => sanitize_text_field( $response['json']['status'] ),
-				'status' => 'SUCCESS',
-			)
-		);
-		wp_die();
+		wp_send_json_success( array(
+			'experiment_status' => sanitize_text_field( $response['json']['status'] ),
+		) );
 	}
 
 	/**
-	 * An AJAX endpoint for optimizely_x_change_status.
+	 * An AJAX endpoint for optimizely_x_create_experiment.
 	 *
 	 * @since 1.0.0
 	 * @access public
 	 */
 	public function create_experiment() {
 
+		// Validate nonce.
+		if ( ! check_ajax_referer( 'optimizely-metabox', 'nonce', false ) ) {
+			wp_send_json_error( __(
+				'Failed to validate the nonce',
+				'optimizely-x'
+			) );
+		}
+
 		// Check for error conditions.
 		if ( empty( $_POST['entity_id'] ) || empty( $_POST['variations'] ) ) {
-			$this->send_error_response(
-				403,
-				'ERROR',
-				array( __( 'Missing entity_id or variations.', 'optimizely-x' ) )
-			);
+			wp_send_json_error( __(
+				'Missing entity_id or variations.',
+				'optimizely-x'
+			) );
 		}
 
 		// Ensure we have a project ID before proceeding.
 		$project_id = absint( get_option( 'optimizely_project_id' ) );
 		if ( empty( $project_id ) ) {
-			$this->send_error_response(
-				403,
-				'ERROR',
-				array( __( 'Missing project ID.', 'optimizely-x' ) )
-			);
+			wp_send_json_error( __( 'Missing project ID.', 'optimizely-x' ) );
 		}
 
 		// Extract variations from the values sent from the metabox.
 		$variations = json_decode( wp_unslash( $_POST['variations'] ), true );
 		if ( empty( $variations ) || ! is_array( $variations ) ) {
-			$this->send_error_response(
-				403,
-				'ERROR',
-				array( __( 'Missing or malformed variations.', 'optimizely-x' ) )
-			);
+			wp_send_json_error( __(
+				'Missing or malformed variations.',
+				'optimizely-x'
+			) );
 		}
 
 		// Sanitize variations before proceeding.
 		$variations = array_map( 'sanitize_text_field', $variations );
 		$variations = array_filter( $variations );
 		if ( empty( $variations ) ) {
-			$this->send_error_response(
-				403,
-				'ERROR',
-				array( __( 'Variations failed sanitization.', 'optimizely-x' ) )
-			);
+			wp_send_json_error( __(
+				'Variations failed sanitization.',
+				'optimizely-x'
+			) );
 		}
 
 		// Try to get a post from the entity ID.
 		$post = get_post( absint( $_POST['entity_id'] ) );
 		if ( empty( $post ) ) {
-			$this->send_error_response(
-				403,
-				'ERROR',
-				array( __( 'Failed to look up the post by ID.', 'optimizely-x' ) )
-			);
+			wp_send_json_error( __(
+				'Failed to look up the post by ID.',
+				'optimizely-x'
+			) );
 		}
 
 		// Try to build a targeting page for this post.
 		$targeting_id = $this->build_targeting_page( $project_id, $post );
 		if ( empty( $targeting_id ) ) {
-			$this->send_error_response(
-				403,
-				'ERROR',
-				array(
-					__(
-						'An error occurred during the creation of a targeting page.',
-						'optimizely-x'
-					),
-				)
-			);
+			wp_send_json_error( __(
+				'An error occurred during the creation of a targeting page.',
+				'optimizely-x'
+			) );
 		}
 
 		// Try to build an event page for this post.
 		$event_id = $this->build_event_page( $project_id, $post );
 		if ( empty( $event_id ) ) {
-			$this->send_error_response(
-				403,
-				'ERROR',
-				array(
-					__(
-						'An error occurred during the creation of an event page.',
-						'optimizely-x'
-					),
-				)
-			);
+			wp_send_json_error( __(
+				'An error occurred during the creation of an event page.',
+				'optimizely-x'
+			) );
 		}
 
 		// Try to create an experiment for this post.
@@ -216,16 +200,10 @@ class AJAX {
 			$event_id
 		);
 		if ( empty( $experiment_id ) ) {
-			$this->send_error_response(
-				403,
-				'ERROR',
-				array(
-					__(
-						'An error occurred during the creation of an event page.',
-						'optimizely-x'
-					),
-				)
-			);
+			wp_send_json_error( __(
+				'An error occurred during the creation of an event page.',
+				'optimizely-x'
+			) );
 		}
 
 		// Get the editor link for the experiment.
@@ -274,14 +252,12 @@ class AJAX {
 		}
 
 		// Send the response.
-		echo wp_json_encode(
+		wp_send_json_success(
 			array(
 				'editor_link' => esc_url_raw( $editor_link ),
 				'experiment_id' => absint( $experiment_id ),
-				'status' => 'SUCCESS',
 			)
 		);
-		wp_die();
 	}
 
 	/**
@@ -298,12 +274,10 @@ class AJAX {
 
 		// Ensure there are results to loop over.
 		if ( empty( $response['json'] ) || ! is_array( $response['json'] ) ) {
-			$this->send_error_response(
-				400,
-				'ERROR',
-				array( __( 'Failed to get a list of projects.', 'optimizely-x' ) )
-			);
-			wp_die();
+			wp_send_json_error( __(
+				'Failed to get a list of projects.',
+				'optimizely-x'
+			) );
 		}
 
 		// Loop over results from response and add each to the list.
@@ -328,13 +302,7 @@ class AJAX {
 		}
 
 		// Send the AJAX response.
-		echo wp_json_encode(
-			array(
-				'projects' => $projects,
-				'status' => 'SUCCESS',
-			)
-		);
-		wp_die();
+		wp_send_json_success( $projects );
 	}
 
 	/**
@@ -427,9 +395,9 @@ class AJAX {
 			),
 			'edit_url' => get_permalink( $post ),
 			'name' => sprintf(
-				esc_html_x(
+				/* translators: 1: post ID, 2: post title */
+				esc_html__(
 					'WordPress [%1$d]: %2$s event page',
-					'First parameter is the post ID, second is the post title.',
 					'optimizely-x'
 				),
 				absint( $post->ID ),
@@ -498,9 +466,9 @@ class AJAX {
 				),
 			),
 			'name' => sprintf(
-				esc_html_x(
+				/* translators: 1: post ID, 2: post title */
+				esc_html__(
 					'WordPress [%1$d]: %2$s',
-					'First parameter is the post ID, second is the post title.',
 					'optimizely-x'
 				),
 				absint( $post->ID ),
@@ -561,9 +529,9 @@ class AJAX {
 			),
 			'edit_url' => get_permalink( $post ),
 			'name' => sprintf(
-				esc_html_x(
+				/* translators: 1: post ID, 2: post title. */
+				esc_html__(
 					'WordPress [%1$d]: %2$s targeting page',
-					'First parameter is the post ID, second is the post title.',
 					'optimizely-x'
 				),
 				absint( $post->ID ),
@@ -730,42 +698,12 @@ class AJAX {
 			return;
 		}
 
-		// Extract error values from the response.
-		$code = ( ! empty( $response['code'] ) ) ? $response['code'] : 400;
-		$error = ( ! empty( $response['error'] ) ) ? $response['error'] : array();
-		$status = ( ! empty( $response['status'] ) ) ? $response['status'] : 'ERROR';
-
-		// Send the error response.
-		$this->send_error_response( $code, $status, $error );
-	}
-
-	/**
-	 * A function to send an error response via AJAX.
-	 *
-	 * @param int $code The HTTP error code to use.
-	 * @param string $status The status code string to use, such as SUCCESS or ERROR.
-	 * @param array $error An optional array of error messages.
-	 *
-	 * @since 1.0.0
-	 * @access private
-	 */
-	private function send_error_response( $code, $status, $error = array() ) {
-
-		// If (for whatever reason) the error is not an array, make it so.
-		if ( ! is_array( $error ) ) {
-			$error = array( $error );
+		// Flatten the error list, if necessary.
+		if ( is_array( $response['error'] ) ) {
+			$response['error'] = implode( "\n", $response['error'] );
 		}
 
 		// Send the error data in the response.
-		echo wp_json_encode(
-			array(
-				'code' => absint( $code ),
-				'error' => array_map( 'sanitize_text_field', $error ),
-				'status' => sanitize_text_field( $status ),
-			)
-		);
-
-		// Die with dignity.
-		wp_die();
+		wp_send_json_error( sanitize_text_field( $response['error'] ) );
 	}
 }

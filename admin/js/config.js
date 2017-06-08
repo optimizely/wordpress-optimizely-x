@@ -86,13 +86,13 @@
 						action: 'optimizely_x_get_projects'
 					},
 					dataType: 'json'
-				} ).done( function ( data ) {
+				} ).done( function ( response ) {
 
 					// Hide loading message.
 					$loading.addClass( 'hidden' );
 
 					// Handle errors.
-					if ( ! data || ! data.projects || $.isEmptyObject( data.projects ) ) {
+					if ( ! response.data || $.isEmptyObject( response.data ) ) {
 						$( '.optimizely-invalid-token' ).removeClass( 'hidden' );
 						return;
 					}
@@ -101,7 +101,7 @@
 					OptimizelyConfig.showRow( '.optimizely-requires-authentication' );
 
 					// Populate project list on success.
-					OptimizelyConfig.populateProjects( data.projects );
+					OptimizelyConfig.populateProjects( response.data );
 				} );
 			},
 
