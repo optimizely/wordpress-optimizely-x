@@ -12,7 +12,7 @@ This plugin helps you configure your WordPress website to use Optimizely X, a dr
 
 == Description ==
 
-This plugin helps you configure your WordPress website to use Optimizely X. If you are new to Optimizely or have started using Optimizely Classic (not X), than please use the [Optimizely Classic plugin](https://wordpress.org/plugins/optimizely/).
+This plugin helps you configure your WordPress website to use Optimizely X. If you are new to Optimizely or have started using Optimizely Classic (not X), then please use the [Optimizely Classic plugin](https://wordpress.org/plugins/optimizely/).
 
 Optimizely is a dramatically easier way for you to improve your website through A/B testing. Create an experiment in minutes with our easy-to-use visual interface with absolutely no coding or engineering required. Convert your website visitors into customers and earn more revenue today!
 
