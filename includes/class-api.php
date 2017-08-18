@@ -225,6 +225,7 @@ class API {
 			'headers' => array(
 				'Authorization' => 'Bearer ' . sanitize_text_field( $token ),
 			),
+			'timeout' => 60,
 		);
 
 		// Encode data in body or query depending on request method.
