@@ -24,6 +24,7 @@ if ( empty( $url_targeting ) ) {
 </div>
 <p class="description">
 	<?php printf(
+		/* translators: 1: opening <a> tag, 2: </a> */
 		esc_html__( 'This is the default location on your site you would like to run experiments on. By default we use your domain and a substring match so that the experiment will run anywhere on your site. Used with conditional activation this will assure you change the headline no matter where it is. For more info on URL targeting, please read this %1$sknowledge base article%2$s.', 'optimizely-x' ),
 		'<a href="https://help.optimizely.com/hc/en-us/articles/200040835" target="_blank">',
 		'</a>'
