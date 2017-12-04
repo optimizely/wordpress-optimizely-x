@@ -7,7 +7,7 @@
  */
 
 // If we don't have a valid project ID, bail.
-$project_id = get_option( 'optimizely_project_id' );
+$project_id = get_option( 'optimizely_x_project_id' );
 if ( empty( $project_id ) ) {
 	return;
 }

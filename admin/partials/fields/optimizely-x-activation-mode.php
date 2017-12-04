@@ -1,28 +1,28 @@
 <?php
 /**
- * Optimizely X admin field partials: optimizely_activation_mode field
+ * Optimizely X admin field partials: optimizely_x_activation_mode field
  *
  * @package Optimizely_X
  * @since 1.0.0
  */
 
 // Negotiate activation mode value.
-$activation_mode = get_option( 'optimizely_activation_mode' );
+$activation_mode = get_option( 'optimizely_x_activation_mode' );
 if ( empty( $activation_mode ) ) {
 	$activation_mode = 'immediate';
 }
 
 ?>
 
-<fieldset id="optimizely-activation-mode">
+<fieldset id="optimizely-x-activation-mode">
 	<legend class="screen-reader-text">
 		<span><?php esc_html_e( 'Activation Mode', 'optimizely-x' ); ?></span>
 	</legend>
 	<div>
-		<label for="optimizely-activation-mode-immediate">
+		<label for="optimizely-x-activation-mode-immediate">
 			<input class="optimizely-requires-authentication"
-				id="optimizely-activation-mode-immediate"
-				name="optimizely_activation_mode"
+				id="optimizely-x-activation-mode-immediate"
+				name="optimizely_x_activation_mode"
 				type="radio"
 				value="immediate"
 				<?php checked( $activation_mode, 'immediate' ); ?>
@@ -31,10 +31,10 @@ if ( empty( $activation_mode ) ) {
 		</label>
 	</div>
 	<div>
-		<label for="optimizely-activation-mode-conditional">
+		<label for="optimizely-x-activation-mode-conditional">
 			<input class="optimizely-requires-authentication"
-				id="optimizely-activation-mode-conditional"
-				name="optimizely_activation_mode"
+				id="optimizely-x-activation-mode-conditional"
+				name="optimizely_x_activation_mode"
 				type="radio"
 				value="conditional"
 				<?php checked( $activation_mode, 'conditional' ); ?>

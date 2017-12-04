@@ -26,8 +26,8 @@
 			 * Handles a change event for the activation mode radio buttons.
 			 */
 			changeActivationMode: function () {
-				var $selected = $( 'input[name="optimizely_activation_mode"]:checked' ),
-					$parentTR = $( '#optimizely-conditional-activation-code' ).closest( 'tr' );
+				var $selected = $( 'input[name="optimizely_x_activation_mode"]:checked' ),
+					$parentTR = $( '#optimizely-x-conditional-activation-code' ).closest( 'tr' );
 
 				// Fork for selected activation mode.
 				if ( 'conditional' === $selected.val() ) {
@@ -52,8 +52,8 @@
 			init: function () {
 
 				// Beautify the textareas containing compressed JavaScript.
-				this.beautify( '#optimizely-conditional-activation-code' );
-				this.beautify( '#optimizely-variation-template' );
+				this.beautify( '#optimizely-x-conditional-activation-code' );
+				this.beautify( '#optimizely-x-variation-template' );
 
 				// Set up listeners for form value changes.
 				this.setupConditionalActivation();
@@ -72,7 +72,7 @@
 				var $loading = $( '#optimizely-config' ).find( '.optimizely-loading' );
 
 				// Ensure there is a token set.
-				if ( ! $( '#optimizely-token' ).val() ) {
+				if ( ! $( '#optimizely-x-token' ).val() ) {
 					return;
 				}
 
@@ -113,7 +113,7 @@
 			populateProjects: function ( projects ) {
 				var name,
 					$currentOption,
-					$projectList = $( '#optimizely-project-id' ),
+					$projectList = $( '#optimizely-x-project-id' ),
 					$newOption;
 
 				// Loop through projects and add each.
@@ -148,9 +148,9 @@
 			setupConditionalActivation: function () {
 
 				// Setup listener for activation mode radio button changes.
-				$( '#optimizely-activation-mode' ).on(
+				$( '#optimizely-x-activation-mode' ).on(
 					'change',
-					'[name="optimizely_activation_mode"]',
+					'[name="optimizely_x_activation_mode"]',
 					this.changeActivationMode
 				);
 
@@ -180,8 +180,8 @@
 			 */
 			updateProject: function () {
 				var $projectCode = $( '#optimizely-project-code' ),
-					$projectId = $( '#optimizely-project-id' ).find( ':selected' ),
-					$projectName = $( '#optimizely-project-name' ),
+					$projectId = $( '#optimizely-x-project-id' ).find( ':selected' ),
+					$projectName = $( '#optimizely-x-project-name' ),
 					$projectCodePreview;
 
 				// Remove the existing project code.

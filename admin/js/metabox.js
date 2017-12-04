@@ -80,16 +80,16 @@
 					var value = $( e ).val();
 
 					// Check for blank titles.
-					if ( '' === value ) {
-						errors.push( optimizely_metabox_strings.no_title.replace( '%d', (
-						i + 1
-						) ) );
-						return;
+					if ( '' !== value ) {
+						// Store the variation value in the consolidated array.
+						variations.push( value );
 					}
 
-					// Store the variation value in the consolidated array.
-					variations.push( value );
 				} );
+
+				if ( 0 === variations.length ) {
+					errors.push( optimizely_metabox_strings.no_title );
+				}
 
 				// Handle validation errors.
 				if ( errors.length > 0 ) {
@@ -100,7 +100,6 @@
 				// Swap the new experiment block for the loading block.
 				$( '.optimizely-loading' ).removeClass( 'hidden' );
 				$( '.optimizely-new-experiment' ).addClass( 'hidden' );
-				$( '.optimizely-variation input' ).removeAttr( 'required' );
 
 				// Send the variation data via AJAX.
 				$.ajax( {
@@ -122,7 +121,6 @@
 					if ( ! response.success ) {
 						OptimizelyMetabox.showError( optimizely_metabox_strings.experiment_error );
 						$( '.optimizely-new-experiment' ).removeClass( 'hidden' );
-						$( '.optimizely-variation input' ).attr( 'required', true );
 						return;
 					}
 

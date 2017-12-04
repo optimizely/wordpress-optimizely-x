@@ -1,20 +1,20 @@
 <?php
 /**
- * Optimizely X admin field partials: optimizely_token field
+ * Optimizely X admin field partials: optimizely_x_token field
  *
  * @package Optimizely_X
  * @since 1.0.0
  */
 
-$token = get_option( 'optimizely_token' );
+$token = get_option( 'optimizely_x_token' );
 if ( ! empty( $token ) ) {
 	$token = hash( 'ripemd160', $token );
 }
 ?>
 
 <div>
-	<input id="optimizely-token"
-		name="optimizely_token"
+	<input id="optimizely-x-token"
+		name="optimizely_x_token"
 		type="password"
 		maxlength="80"
 		value="<?php echo esc_attr( $token ); ?>" class="code"

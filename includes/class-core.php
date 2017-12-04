@@ -16,71 +16,15 @@ namespace Optimizely_X;
  */
 class Core {
 
+	use Singleton;
+
 	/**
 	 * The current version of the plugin.
 	 *
 	 * @since 1.0.0
 	 * @var string
 	 */
-	const VERSION = '1.0.0';
-
-	/**
-	 * Singleton instance.
-	 *
-	 * @since 1.0.0
-	 * @access private
-	 * @var Core
-	 */
-	private static $instance;
-
-	/**
-	 * Gets the singleton instance.
-	 *
-	 * @since 1.0.0
-	 * @access public
-	 *
-	 * @return Core
-	 */
-	public static function instance() {
-
-		// Initialize the instance, if necessary.
-		if ( ! isset( self::$instance ) ) {
-			self::$instance = new Core;
-			self::$instance->setup();
-		}
-
-		return self::$instance;
-	}
-
-	/**
-	 * Empty clone method, forcing the use of the instance() method.
-	 *
-	 * @see self::instance()
-	 *
-	 * @access private
-	 */
-	private function __clone() {
-	}
-
-	/**
-	 * Empty constructor, forcing the use of the instance() method.
-	 *
-	 * @see self::instance()
-	 *
-	 * @access private
-	 */
-	private function __construct() {
-	}
-
-	/**
-	 * Empty wakeup method, forcing the use of the instance() method.
-	 *
-	 * @see self::instance()
-	 *
-	 * @access private
-	 */
-	private function __wakeup() {
-	}
+	const VERSION = '1.2.0';
 
 	/**
 	 * Initialize the objects that control the plugin's functionality.
@@ -90,7 +34,9 @@ class Core {
 	 */
 	private function setup() {
 		Admin::instance();
-		AJAX::instance();
+		AJAX_Config::instance();
+		AJAX_Metabox::instance();
+		AJAX_Results::instance();
 		Frontend::instance();
 		I18N::instance();
 	}

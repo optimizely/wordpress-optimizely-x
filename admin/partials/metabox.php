@@ -13,7 +13,7 @@ $experiment_id = get_post_meta( $post->ID, 'optimizely_experiment_id', true );
 $status = get_post_meta( $post->ID, 'optimizely_experiment_status', true );
 
 // Negotiate the number of variations for this post.
-$num_variations = absint( get_option( 'optimizely_num_variations' ) );
+$num_variations = absint( get_option( 'optimizely_x_num_variations' ) );
 $post_num_variations = absint( get_post_meta( $post->ID, 'optimizely_variations_num', true ) );
 if ( empty( $post_num_variations ) ) {
 	$post_num_variations = $num_variations;
@@ -42,7 +42,6 @@ if ( empty( $post_num_variations ) ) {
 						name="<?php echo esc_attr( $meta_key ); ?>"
 						placeholder="<?php esc_attr_e( 'Title', 'optimizely-x' ); ?> <?php echo absint( $i ); ?>"
 						type="text"
-						<?php echo empty( $experiment_id ) ? 'required' : ''; ?>
 					/>
 				</div>
 			<?php endfor; ?>

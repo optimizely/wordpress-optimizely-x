@@ -15,6 +15,8 @@ namespace Optimizely_X;
  */
 class Admin {
 
+	use Singleton;
+
 	/**
 	 * The default conditional template JavaScript.
 	 *
@@ -46,15 +48,6 @@ utils.waitForElement( '.post-\$POST_ID h3 a' ).then( function () {
 JAVASCRIPT;
 
 	/**
-	 * Singleton instance.
-	 *
-	 * @since 1.0.0
-	 * @access private
-	 * @var Admin
-	 */
-	private static $instance;
-
-	/**
 	 * Determine whether Optimizely settings are fully initialized.
 	 *
 	 * If settings are fully initialized, then experiments can be created.
@@ -66,29 +59,10 @@ JAVASCRIPT;
 	public static function is_initialized() {
 
 		// Try to get the token and the project ID.
-		$token = get_option( 'optimizely_token' );
-		$project_id = absint( get_option( 'optimizely_project_id' ) );
+		$token = get_option( 'optimizely_x_token' );
+		$project_id = absint( get_option( 'optimizely_x_project_id' ) );
 
 		return ( ! empty( $token ) && ! empty( $project_id ) );
-	}
-
-	/**
-	 * Gets the singleton instance.
-	 *
-	 * @since 1.0.0
-	 * @access public
-	 *
-	 * @return Admin
-	 */
-	public static function instance() {
-
-		// Initialize the instance, if necessary.
-		if ( ! isset( self::$instance ) ) {
-			self::$instance = new Admin;
-			self::$instance->setup();
-		}
-
-		return self::$instance;
 	}
 
 	/**
@@ -128,6 +102,15 @@ JAVASCRIPT;
 			array( $this, 'render_page_config' ),
 			OPTIMIZELY_X_BASE_URL . '/admin/images/optimizely-icon.png'
 		);
+
+		add_submenu_page(
+			'optimizely-config',
+			esc_html__( 'Results', 'optimizely-x' ),
+			esc_html__( 'Results', 'optimizely-x' ),
+			Filters::admin_capability(),
+			'optimizely-results',
+			array( $this, 'render_page_results' )
+		);
 	}
 
 	/**
@@ -164,43 +147,43 @@ JAVASCRIPT;
 
 		// Define fields to register.
 		$fields = array(
-			'optimizely_token' => array(
+			'optimizely_x_token' => array(
 				'label' => esc_html__( 'Personal Token', 'optimizely-x' ),
 				'sanitize' => array( $this, 'field_sanitize_token' ),
 			),
-			'optimizely_project_id' => array(
+			'optimizely_x_project_id' => array(
 				'label' => esc_html__( 'Choose a Project', 'optimizely-x' ),
 				'sanitize' => 'absint',
 			),
-			'optimizely_project_name' => array(
+			'optimizely_x_project_name' => array(
 				'label' => esc_html__( 'Project Name', 'optimizely-x' ),
 				'sanitize' => 'sanitize_text_field',
 			),
-			'optimizely_post_types' => array(
+			'optimizely_x_post_types' => array(
 				'label' => esc_html__( 'Post Types', 'optimizely-x' ),
 				'sanitize' => array( $this, 'field_sanitize_post_types' ),
 			),
-			'optimizely_url_targeting' => array(
+			'optimizely_x_url_targeting' => array(
 				'label' => esc_html__( 'Default URL Targeting', 'optimizely-x' ),
 				'sanitize' => array( $this, 'field_sanitize_url_targeting' ),
 			),
-			'optimizely_url_targeting_type' => array(
+			'optimizely_x_url_targeting_type' => array(
 				'label' => esc_html__( 'URL Targeting Type', 'optimizely-x' ),
 				'sanitize' => array( $this, 'field_sanitize_url_targeting_type' ),
 			),
-			'optimizely_variation_template' => array(
+			'optimizely_x_variation_template' => array(
 				'label' => esc_html__( 'Variation Code', 'optimizely-x' ),
 				'sanitize' => array( $this, 'field_sanitize_variation_template' ),
 			),
-			'optimizely_activation_mode' => array(
+			'optimizely_x_activation_mode' => array(
 				'label' => esc_html__( 'Activation Mode', 'optimizely-x' ),
 				'sanitize' => array( $this, 'field_sanitize_activation_mode' ),
 			),
-			'optimizely_conditional_activation_code' => array(
+			'optimizely_x_conditional_activation_code' => array(
 				'label' => esc_html__( 'Conditional Activation Code', 'optimizely-x' ),
 				'sanitize' => array( $this, 'field_sanitize_conditional_activation_code' ),
 			),
-			'optimizely_num_variations' => array(
+			'optimizely_x_num_variations' => array(
 				'label' => esc_html__( 'Number of Variations', 'optimizely-x' ),
 				'sanitize' => array( $this, 'field_sanitize_num_variations' ),
 			),
@@ -247,9 +230,9 @@ JAVASCRIPT;
 	public function admin_notices() {
 
 		// Display a message if no token is set or no project is selected.
-		if ( ! get_option( 'optimizely_token' ) ) {
+		if ( ! get_option( 'optimizely_x_token' ) ) {
 			Partials::load( 'admin', 'notices/no-token' );
-		} elseif ( 0 === absint( get_option( 'optimizely_project_id' ) ) ) {
+		} elseif ( 0 === absint( get_option( 'optimizely_x_project_id' ) ) ) {
 			Partials::load( 'admin', 'notices/no-project-id' );
 		}
 	}
@@ -293,6 +276,28 @@ JAVASCRIPT;
 			);
 		}
 
+		// Enqueue scripts for the results page.
+		if ( 'optimizely_page_optimizely-results' === $hook ) {
+
+			// Enqueue main admin configuration script.
+			wp_enqueue_script(
+				'optimizely_results_script',
+				OPTIMIZELY_X_BASE_URL . '/admin/js/results.js',
+				array( 'jquery' ),
+				Core::VERSION,
+				true
+			);
+
+			// Create a nonce for use in AJAX requests.
+			wp_localize_script(
+				'optimizely_results_script',
+				'optimizely_results_nonce',
+				array(
+					'nonce' => wp_create_nonce( 'optimizely-results' ),
+				)
+			);
+		}
+
 		// Enqueue scripts for the post edit screen.
 		if ( 'post.php' === $hook ) {
 
@@ -314,9 +319,8 @@ JAVASCRIPT;
 						'An error occurred during the creation of the Optimizely experiment.',
 						'optimizely-x'
 					),
-					/* translators: the variation number */
 					'no_title' => __(
-						'Variation #%d does not have a title set.',
+						'You must create at least 1 variation.',
 						'optimizely-x'
 					),
 					'status_error' => __(
@@ -334,11 +338,12 @@ JAVASCRIPT;
 					'nonce' => wp_create_nonce( 'optimizely-metabox' ),
 				)
 			);
+
 		}
 	}
 
 	/**
-	 * A callback function to sanitize the value of optimizely_activation_mode.
+	 * A callback function to sanitize the value of optimizely_x_activation_mode.
 	 *
 	 * @param string $option_value The option value passed from the Settings API.
 	 *
@@ -357,7 +362,7 @@ JAVASCRIPT;
 	}
 
 	/**
-	 * A callback function to sanitize the value of optimizely_conditional_activation_code.
+	 * A callback function to sanitize the value of optimizely_x_conditional_activation_code.
 	 *
 	 * @param string $option_value The option value passed from the Settings API.
 	 *
@@ -376,7 +381,7 @@ JAVASCRIPT;
 	}
 
 	/**
-	 * A callback function to sanitize the value of optimizely_num_variations.
+	 * A callback function to sanitize the value of optimizely_x_num_variations.
 	 *
 	 * @param string $option_value The option value passed from the Settings API.
 	 *
@@ -395,7 +400,7 @@ JAVASCRIPT;
 	}
 
 	/**
-	 * A callback function to sanitize the value of optimizely_post_types.
+	 * A callback function to sanitize the value of optimizely_x_post_types.
 	 *
 	 * @param string $option_value The option value passed from the Settings API.
 	 *
@@ -420,7 +425,7 @@ JAVASCRIPT;
 	}
 
 	/**
-	 * A callback function to sanitize the value of optimizely_token before saving.
+	 * A callback function to sanitize the value of optimizely_x_token before saving.
 	 *
 	 * @param string $option_value The option value passed from the Settings API.
 	 *
@@ -433,7 +438,7 @@ JAVASCRIPT;
 		// Load the current value and determine if the option value is equivalent
 		// to hashing the value saved in the database. If so, use the current value
 		// instead of replacing it with the hashed version used for form display.
-		$current_value = get_option( 'optimizely_token' );
+		$current_value = get_option( 'optimizely_x_token' );
 		$hashed_value = hash( 'ripemd160', $current_value );
 		if ( $option_value === $hashed_value ) {
 			return $current_value;
@@ -443,7 +448,7 @@ JAVASCRIPT;
 	}
 
 	/**
-	 * A callback function to sanitize the value of optimizely_url_targeting.
+	 * A callback function to sanitize the value of optimizely_x_url_targeting.
 	 *
 	 * @param string $option_value The option value passed from the Settings API.
 	 *
@@ -462,7 +467,7 @@ JAVASCRIPT;
 	}
 
 	/**
-	 * A callback function to sanitize the value of optimizely_url_targeting_type.
+	 * A callback function to sanitize the value of optimizely_x_url_targeting_type.
 	 *
 	 * @param string $option_value The option value passed from the Settings API.
 	 *
@@ -481,7 +486,7 @@ JAVASCRIPT;
 	}
 
 	/**
-	 * A callback function to sanitize the value of optimizely_variation_template.
+	 * A callback function to sanitize the value of optimizely_x_variation_template.
 	 *
 	 * @param string $option_value The option value passed from the Settings API.
 	 *
@@ -537,6 +542,16 @@ JAVASCRIPT;
 	}
 
 	/**
+	 * Callback function to render the optimizely-results admin menu page.
+	 *
+	 * @since 1.0.0
+	 * @access public
+	 */
+	public function render_page_results() {
+		Partials::load( 'admin', 'results' );
+	}
+
+	/**
 	 * A callback function to render a configuration field using the Settings API.
 	 *
 	 * @param array $args {
@@ -561,15 +576,19 @@ JAVASCRIPT;
 	}
 
 	/**
-	 * Migrates legacy settings to new formats.
+	 * Migrates legacy settings to new formats and performs
+	 * any other database / option updates for the schema.
 	 *
 	 * @since 1.0.0
 	 * @access public
 	 */
 	public function upgrade_check() {
-
 		// Determine if the database version and code version are the same.
-		$current_version = get_option( 'optimizely_version' );
+		// The version key changed in 1.2.0, so check for both
+		$current_version = get_option( 'optimizely_x_version' );
+		if ( empty( $current_version ) ) {
+			$current_version = get_option( 'optimizely_version' );
+		}
 		if ( version_compare( $current_version, Core::VERSION, '>=' ) ) {
 			return;
 		}
@@ -579,38 +598,13 @@ JAVASCRIPT;
 			$this->upgrade_to_1_0_0();
 		}
 
+		// Handle upgrade to version 1.2.0.
+		if ( version_compare( $current_version, '1.2.0', '<' ) ) {
+			$this->upgrade_to_1_2_0();
+		}
+
 		// Set the database version to the current version in code.
-		update_option( 'optimizely_version', Core::VERSION );
-	}
-
-	/**
-	 * Empty clone method, forcing the use of the instance() method.
-	 *
-	 * @see self::instance()
-	 *
-	 * @access private
-	 */
-	private function __clone() {
-	}
-
-	/**
-	 * Empty constructor, forcing the use of the instance() method.
-	 *
-	 * @see self::instance()
-	 *
-	 * @access private
-	 */
-	private function __construct() {
-	}
-
-	/**
-	 * Empty wakeup method, forcing the use of the instance() method.
-	 *
-	 * @see self::instance()
-	 *
-	 * @access private
-	 */
-	private function __wakeup() {
+		update_option( 'optimizely_x_version', Core::VERSION );
 	}
 
 	/**
@@ -625,7 +619,7 @@ JAVASCRIPT;
 	private function is_post_type_enabled( $post_type ) {
 
 		// Convert selected post types to an array.
-		$selected_post_types = get_option( 'optimizely_post_types', array() );
+		$selected_post_types = get_option( 'optimizely_x_post_types', array() );
 
 		return ( is_array( $selected_post_types )
 			&& in_array( $post_type, $selected_post_types, true )
@@ -694,5 +688,36 @@ JAVASCRIPT;
 
 		// Update the option.
 		update_option( 'optimizely_post_types', $post_types );
+	}
+
+	/**
+	 * Upgrades the database version of the plugin to version 1.2.0.
+	 *
+	 * @access private
+	 */
+	private function upgrade_to_1_2_0() {
+
+		// Options to migrate from legacy naming convention to new convention
+		$option_names = [
+			'optimizely_post_types' => 'optimizely_x_post_types',
+			'optimizely_version' => 'optimizely_x_version',
+			'optimizely_token' => 'optimizely_x_token',
+			'optimizely_project_id' => 'optimizely_x_project_id',
+			'optimizely_project_name' => 'optimizely_x_project_name',
+			'optimizely_url_targeting' => 'optimizely_x_url_targeting',
+			'optimizely_url_targeting_type' => 'optimizely_x_url_targeting_type',
+			'optimizely_variation_template' => 'optimizely_x_variation_template',
+			'optimizely_activation_mode' => 'optimizely_x_activation_mode',
+			'optimizely_conditional_activation_code' => 'optimizely_x_conditional_activation_code',
+			'optimizely_num_variations' => 'optimizely_x_num_variations',
+		];
+
+		foreach ( $option_names as $old_name => $new_name ) {
+			$option_value = get_option( $old_name );
+			if ( false !== $option_value ) {
+				update_option( $new_name, $option_value );
+			}
+		}
+
 	}
 }

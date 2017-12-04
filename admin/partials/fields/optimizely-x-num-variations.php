@@ -1,13 +1,13 @@
 <?php
 /**
- * Optimizely X admin field partials: optimizely_num_variations field
+ * Optimizely X admin field partials: optimizely_x_num_variations field
  *
  * @package Optimizely_X
  * @since 1.0.0
  */
 
 // Negotiate number of variations value.
-$num_variations = get_option( 'optimizely_num_variations' );
+$num_variations = get_option( 'optimizely_x_num_variations' );
 if ( empty( $num_variations ) ) {
 	$num_variations = 2;
 }
@@ -16,9 +16,9 @@ if ( empty( $num_variations ) ) {
 
 <div>
 	<input class="optimizely-requires-authentication"
-		id="optimizely-num-variations"
+		id="optimizely-x-num-variations"
 		maxlength="1"
-		name="optimizely_num_variations"
+		name="optimizely_x_num_variations"
 		type="number"
 		value="<?php echo absint( $num_variations ); ?>"
 	/>
