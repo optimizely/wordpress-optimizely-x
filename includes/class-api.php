@@ -50,12 +50,13 @@ class API {
 	 *
 	 * @param string $operation The operation URL endpoint.
 	 * @param array $data Optional data to include with the request.
+	 * @param bool $extended_timeout Optional flag to allow longer timeouts
 	 *
 	 * @since 1.0.0
 	 * @access public
 	 * @return array The API response data.
 	 */
-	public function get( $operation, $data = array() ) {
+	public function get( $operation, $data = array(), $extended_timeout = false ) {
 
 		// Add the per page option, if not set.
 		if ( empty( $data['per_page'] ) ) {
@@ -77,8 +78,14 @@ class API {
 				$data = array();
 			}
 
-			// Get the API response for the operation.
-			$raw_response = $this->request( 'GET', $operation, $data );
+			// Determine if the raw response is already cached in a transient
+			$transient_key = 'optimizely_x_get_' . md5( $operation . wp_json_encode( $data ) );
+			$raw_response = get_transient( $transient_key );
+			if ( false === $raw_response ) {
+				// Get the API response for the operation.
+				$raw_response = $this->request( 'GET', $operation, $data, $extended_timeout );
+				set_transient( $transient_key, $raw_response, MINUTE_IN_SECONDS * 10 );
+			}
 
 			// Add the response code.
 			if ( ! empty( $raw_response['code'] ) ) {
@@ -119,13 +126,14 @@ class API {
 	 *
 	 * @param string $operation The operation URL endpoint.
 	 * @param array $data Optional data to include with the request.
+	 * @param bool $extended_timeout Optional flag to allow longer timeouts
 	 *
 	 * @since 1.0.0
 	 * @access public
 	 * @return array The API response data.
 	 */
-	public function patch( $operation, $data = array() ) {
-		return $this->request( 'PATCH', $operation, $data );
+	public function patch( $operation, $data = array(), $extended_timeout = false ) {
+		return $this->request( 'PATCH', $operation, $data, $extended_timeout );
 	}
 
 	/**
@@ -133,13 +141,14 @@ class API {
 	 *
 	 * @param string $operation The operation URL endpoint.
 	 * @param array $data Optional data to include with the request.
+	 * @param bool $extended_timeout Optional flag to allow longer timeouts
 	 *
 	 * @since 1.0.0
 	 * @access public
 	 * @return array The API response data.
 	 */
-	public function post( $operation, $data = array() ) {
-		return $this->request( 'POST', $operation, $data );
+	public function post( $operation, $data = array(), $extended_timeout = false ) {
+		return $this->request( 'POST', $operation, $data, $extended_timeout );
 	}
 
 	/**
@@ -147,13 +156,35 @@ class API {
 	 *
 	 * @param string $operation The operation URL endpoint.
 	 * @param array $data Optional data to include with the request.
+	 * @param bool $extended_timeout Optional flag to allow longer timeouts
 	 *
 	 * @since 1.0.0
 	 * @access public
 	 * @return array The API response data.
 	 */
-	public function put( $operation, $data = array() ) {
-		return $this->request( 'PUT', $operation, $data );
+	public function put( $operation, $data = array(), $extended_timeout = false ) {
+		return $this->request( 'PUT', $operation, $data, $extended_timeout );
+	}
+
+	/**
+	 * Deletes the transient (cache) for a specific endpoint GET request.
+	 * The transient key is based off of the unique signature of an
+	 * operation and the data array.
+	 *
+	 * @param string $operation The operation URL endpoint.
+	 * @param array $data Optional data to include with the request.
+	 *
+	 * @since 1.2.0
+	 * @access public
+	 * @return void
+	 */
+	public function delete_endpoint_transient( $operation = '', $data = array() ) {
+		// Add the per page option, if not set.
+		if ( empty( $data['per_page'] ) ) {
+			$data['per_page'] = self::PER_PAGE;
+		}
+		$transient_key = 'optimizely_x_get_' . md5( $operation . wp_json_encode( $data ) );
+		delete_transient( $transient_key );
 	}
 
 	/**
@@ -182,12 +213,19 @@ class API {
 	 * @param string $method One of DELETE, GET, PATCH, POST, or PUT.
 	 * @param string $operation The API endpoint to execute against.
 	 * @param array $data An optional array of data to include with the request.
+	 * @param bool $extended_timeout Optional flag to allow longer timeouts
 	 *
 	 * @since 1.0.0
 	 * @access private
 	 * @return array
 	 */
-	private function request( $method, $operation, $data = array() ) {
+	private function request( $method, $operation, $data = array(), $extended_timeout = false ) {
+
+		if ( $extended_timeout ) {
+			$timeout = 60;
+		} else {
+			$timeout = 5;
+		}
 
 		// If the provided operation is a partial path, convert to a full URL.
 		if ( 0 !== strpos( $operation, self::BASE_URL ) ) {
@@ -209,7 +247,7 @@ class API {
 		}
 
 		// Ensure we have a token before attempting to make the request.
-		$token = get_option( 'optimizely_token' );
+		$token = get_option( 'optimizely_x_token' );
 		if ( empty( $token ) ) {
 			return array(
 				'code' => 401,
@@ -222,7 +260,7 @@ class API {
 
 		// Add authentication header to the request object.
 		$request = array(
-			'timeout' => 60,
+			'timeout' => $timeout,
 			'headers' => array(
 				'Authorization' => 'Bearer ' . sanitize_text_field( $token ),
 			),

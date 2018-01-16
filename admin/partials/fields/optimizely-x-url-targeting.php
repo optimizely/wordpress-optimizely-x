@@ -1,13 +1,13 @@
 <?php
 /**
- * Optimizely X admin field partials: optimizely_url_targeting field
+ * Optimizely X admin field partials: optimizely_x_url_targeting field
  *
  * @package Optimizely_X
  * @since 1.0.0
  */
 
 // Negotiate URL targeting value.
-$url_targeting = get_option( 'optimizely_url_targeting' );
+$url_targeting = get_option( 'optimizely_x_url_targeting' );
 if ( empty( $url_targeting ) ) {
 	$url_targeting = get_site_url();
 }
@@ -16,8 +16,8 @@ if ( empty( $url_targeting ) ) {
 
 <div>
 	<input class="optimizely-requires-authentication"
-		id="optimizely-url-targeting"
-		name="optimizely_url_targeting"
+		id="optimizely-x-url-targeting"
+		name="optimizely_x_url_targeting"
 		type="text"
 		value="<?php echo esc_attr( $url_targeting );  ?>"
 	/>

@@ -15,33 +15,7 @@ namespace Optimizely_X;
  */
 class Frontend {
 
-	/**
-	 * Singleton instance.
-	 *
-	 * @since 1.0.0
-	 * @access private
-	 * @var Frontend
-	 */
-	private static $instance;
-
-	/**
-	 * Gets the singleton instance.
-	 *
-	 * @since 1.0.0
-	 * @access public
-	 *
-	 * @return Frontend
-	 */
-	public static function instance() {
-
-		// Initialize the instance, if necessary.
-		if ( ! isset( self::$instance ) ) {
-			self::$instance = new Frontend;
-			self::$instance->setup();
-		}
-
-		return self::$instance;
-	}
+	use Singleton;
 
 	/**
 	 * Injects the Optimizely script into the <head> of the theme.
@@ -54,43 +28,12 @@ class Frontend {
 	}
 
 	/**
-	 * Empty clone method, forcing the use of the instance() method.
-	 *
-	 * @see self::instance()
-	 *
-	 * @access private
-	 */
-	private function __clone() {
-	}
-
-	/**
-	 * Empty constructor, forcing the use of the instance() method.
-	 *
-	 * @see self::instance()
-	 *
-	 * @access private
-	 */
-	private function __construct() {
-	}
-
-	/**
-	 * Empty wakeup method, forcing the use of the instance() method.
-	 *
-	 * @see self::instance()
-	 *
-	 * @access private
-	 */
-	private function __wakeup() {
-	}
-
-	/**
 	 * Registers action and filter hooks.
 	 *
 	 * @since 1.0.0
 	 * @access private
 	 */
 	private function setup() {
-
 		// Register action hooks.
 		add_action( 'wp_head', array( $this, 'inject_script' ), - 1000 );
 	}

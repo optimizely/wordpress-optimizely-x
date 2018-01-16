@@ -1,13 +1,13 @@
 <?php
 /**
- * Optimizely X admin field partials: optimizely_conditional_activation_code field
+ * Optimizely X admin field partials: optimizely_x_conditional_activation_code field
  *
  * @package Optimizely_X
  * @since 1.0.0
  */
 
 // Negotiate conditional activation code value.
-$conditional_activation_code = get_option( 'optimizely_conditional_activation_code' );
+$conditional_activation_code = get_option( 'optimizely_x_conditional_activation_code' );
 if ( empty( $conditional_activation_code ) ) {
 	$conditional_activation_code = Optimizely_X\Admin::DEFAULT_CONDITIONAL_TEMPLATE;
 }
@@ -16,8 +16,8 @@ if ( empty( $conditional_activation_code ) ) {
 
 <div>
 	<textarea class="code optimizely-requires-authentication"
-		id="optimizely-conditional-activation-code"
-		name="optimizely_conditional_activation_code"
+		id="optimizely-x-conditional-activation-code"
+		name="optimizely_x_conditional_activation_code"
 		rows="5"
 	><?php echo esc_textarea( $conditional_activation_code ); ?></textarea>
 </div>

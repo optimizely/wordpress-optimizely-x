@@ -1,13 +1,13 @@
 <?php
 /**
- * Optimizely X admin field partials: optimizely_variation_template field
+ * Optimizely X admin field partials: optimizely_x_variation_template field
  *
  * @package Optimizely_X
  * @since 1.0.0
  */
 
 // Negotiate URL targeting type value.
-$variation_template = get_option( 'optimizely_variation_template' );
+$variation_template = get_option( 'optimizely_x_variation_template' );
 if ( empty( $variation_template ) ) {
 	$variation_template = Optimizely_X\Admin::DEFAULT_VARIATION_TEMPLATE;
 }
@@ -16,8 +16,8 @@ if ( empty( $variation_template ) ) {
 
 <div>
 	<textarea class="code optimizely-requires-authentication"
-		id="optimizely-variation-template"
-		name="optimizely_variation_template"
+		id="optimizely-x-variation-template"
+		name="optimizely_x_variation_template"
 		rows="5"
 	><?php echo esc_textarea( $variation_template ); ?></textarea>
 </div>

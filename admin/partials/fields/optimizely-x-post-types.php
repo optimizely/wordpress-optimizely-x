@@ -1,6 +1,6 @@
 <?php
 /**
- * Optimizely X admin field partials: optimizely_post_types field
+ * Optimizely X admin field partials: optimizely_x_post_types field
  *
  * @package Optimizely_X
  * @since 1.0.0
@@ -8,7 +8,7 @@
 
 // Get list of supported post types and selected post types.
 $post_types = Optimizely_X\Admin::supported_post_types();
-$selected_post_types = get_option( 'optimizely_post_types' );
+$selected_post_types = get_option( 'optimizely_x_post_types' );
 if ( empty( $selected_post_types ) || ! is_array( $selected_post_types ) ) {
 	$selected_post_types = array( 'post' );
 }
@@ -21,10 +21,10 @@ if ( empty( $selected_post_types ) || ! is_array( $selected_post_types ) ) {
 	</legend>
 	<?php foreach ( $post_types as $post_type ) : ?>
 		<div>
-			<label for="optimizely-post-types-<?php echo esc_attr( $post_type->name ); ?>">
+			<label for="optimizely-x-post-types-<?php echo esc_attr( $post_type->name ); ?>">
 				<input class="optimizely-requires-authentication"
-					id="optimizely-post-types-<?php echo esc_attr( $post_type->name ); ?>"
-					name="optimizely_post_types[]"
+					id="optimizely-x-post-types-<?php echo esc_attr( $post_type->name ); ?>"
+					name="optimizely_x_post_types[]"
 					type="checkbox"
 					value="<?php echo esc_attr( $post_type->name ); ?>"
 					<?php checked( in_array( $post_type->name, $selected_post_types, true ) ); ?>
