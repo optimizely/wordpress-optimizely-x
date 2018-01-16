@@ -26,6 +26,14 @@ class AJAX_Results extends AJAX {
 	 * @access public
 	 */
 	public function update_experiment_status() {
+
+		if ( ! current_user_can( Filters::admin_capability() ) ) {
+			wp_send_json_error( __(
+				'The current user is not authorized.',
+				'optimizely-x'
+			) );
+		}
+
 		// Validate nonce.
 		if ( ! check_ajax_referer( 'optimizely-results', 'nonce', false ) ) {
 			wp_send_json_error( __(
@@ -100,6 +108,14 @@ class AJAX_Results extends AJAX {
 	 * @access public
 	 */
 	public function archive_experiment() {
+
+		if ( ! current_user_can( Filters::admin_capability() ) ) {
+			wp_send_json_error( __(
+				'The current user is not authorized.',
+				'optimizely-x'
+			) );
+		}
+
 		// Validate nonce.
 		if ( ! check_ajax_referer( 'optimizely-results', 'nonce', false ) ) {
 			wp_send_json_error( __(
@@ -173,6 +189,14 @@ class AJAX_Results extends AJAX {
 	 * @access public
 	 */
 	public function launch_variation() {
+
+		if ( ! current_user_can( Filters::admin_capability() ) ) {
+			wp_send_json_error( __(
+				'The current user is not authorized.',
+				'optimizely-x'
+			) );
+		}
+
 		// Validate nonce.
 		if ( ! check_ajax_referer( 'optimizely-results', 'nonce', false ) ) {
 			wp_send_json_error( __(

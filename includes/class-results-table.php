@@ -198,7 +198,12 @@ class Results_Table extends \WP_List_Table {
 	 * @return array
 	 */
 	private function get_sanitized_fields() {
+
 		$sanitized_fields = [];
+
+		if ( ! current_user_can( Filters::admin_capability() ) ) {
+			return $sanitized_fields;
+		}
 
 		// Verify the nonce before atttempting to use any globals
 		if ( isset( $_GET['_wpnonce'] ) && wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ), 'bulk-' . $this->_args['plural'] ) ) { // Input var okay.

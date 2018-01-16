@@ -26,6 +26,13 @@ class AJAX_Metabox extends AJAX {
 	 */
 	public function change_status() {
 
+		if ( ! current_user_can( Filters::admin_capability() ) ) {
+			wp_send_json_error( __(
+				'The current user is not authorized.',
+				'optimizely-x'
+			) );
+		}
+
 		// Validate nonce.
 		if ( ! check_ajax_referer( 'optimizely-metabox', 'nonce', false ) ) {
 			wp_send_json_error( __(
@@ -88,6 +95,13 @@ class AJAX_Metabox extends AJAX {
 	 * @access public
 	 */
 	public function create_experiment() {
+
+		if ( ! current_user_can( Filters::admin_capability() ) ) {
+			wp_send_json_error( __(
+				'The current user is not authorized.',
+				'optimizely-x'
+			) );
+		}
 
 		// Validate nonce.
 		if ( ! check_ajax_referer( 'optimizely-metabox', 'nonce', false ) ) {
