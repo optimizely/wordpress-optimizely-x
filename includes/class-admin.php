@@ -39,11 +39,11 @@ JAVASCRIPT;
 var utils = window['optimizely'].get('utils');
 utils.waitForElement( '.post-\$POST_ID h1' ).then( function () {
     var element = document.querySelector( '.post-\$POST_ID h1' );
-    element.innerHTML = '\$NEW_TITLE';
+    element.innerText = '\$NEW_TITLE';
 } );
 utils.waitForElement( '.post-\$POST_ID h3 a' ).then( function () {
     var element = document.querySelector( '.post-\$POST_ID h3 a' );
-    element.innerHTML = '\$NEW_TITLE';
+    element.innerText = '\$NEW_TITLE';
 } );
 JAVASCRIPT;
 
@@ -126,15 +126,17 @@ JAVASCRIPT;
 			return;
 		}
 
-		// Add the meta box.
-		add_meta_box(
-			'optimizely-headlines',
-			esc_html__( 'A/B Test Headlines', 'optimizely-x' ),
-			array( $this, 'metabox_headlines_render' ),
-			get_post_type(),
-			'side',
-			'high'
-		);
+		if ( current_user_can( Filters::admin_capability() ) ) {
+			// Add the meta box.
+			add_meta_box(
+				'optimizely-headlines',
+				esc_html__( 'A/B Test Headlines', 'optimizely-x' ),
+				array( $this, 'metabox_headlines_render' ),
+				get_post_type(),
+				'side',
+				'high'
+			);
+		}
 	}
 
 	/**

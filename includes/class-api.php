@@ -224,7 +224,10 @@ class API {
 		if ( $extended_timeout ) {
 			$timeout = 60;
 		} else {
-			$timeout = 5;
+			// Temporarily set all requests to 60 second timeout.
+			// Until cause of long API responses is fixed.
+			// See VIP Zendesk Ticket z-86051
+			$timeout = 60;
 		}
 
 		// If the provided operation is a partial path, convert to a full URL.
@@ -306,7 +309,7 @@ class API {
 		// If this is an error, return that.
 		// Timeout errors will be caught here.
 		if ( is_wp_error( $response ) ) {
-			return wp_send_json_error( $response );
+			return $response;
 		} else {
 			// Build result object.
 			$result = array(

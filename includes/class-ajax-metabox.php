@@ -65,6 +65,7 @@ class AJAX_Metabox extends AJAX {
 
 		// Process the request and check for errors.
 		$response = $this->api->patch( $operation );
+		$this->log_request( $post_id, 'PATCH', $operation, array(), $response );
 		$this->maybe_send_error_response( $response );
 
 		// Ensure we got a status in the response.
@@ -172,13 +173,13 @@ class AJAX_Metabox extends AJAX {
 		}
 
 		// Try to create an experiment for this post.
-		$experiment_id = $this->build_experiment(
+		$experiment_id = absint( $this->build_experiment(
 			$project_id,
 			$post,
 			$variations,
 			$targeting_id,
 			$event_id
-		);
+		) );
 		if ( empty( $experiment_id ) ) {
 			wp_send_json_error( __(
 				'An error occurred during the creation of an event page.',
@@ -194,28 +195,28 @@ class AJAX_Metabox extends AJAX {
 		);
 
 		// Store the editor link in postmeta.
-		add_post_meta(
+		update_post_meta(
 			$post->ID,
 			'optimizely_editor_link',
 			esc_url_raw( $editor_link )
 		);
 
 		// Store the experiment ID in postmeta.
-		add_post_meta(
+		update_post_meta(
 			$post->ID,
 			'optimizely_experiment_id',
 			absint( $experiment_id )
 		);
 
 		// Store the experiment status in postmeta.
-		add_post_meta(
+		update_post_meta(
 			$post->ID,
 			'optimizely_experiment_status',
 			'not_started'
 		);
 
 		// Store the number of variations in postmeta.
-		add_post_meta(
+		update_post_meta(
 			$post->ID,
 			'optimizely_variations_num',
 			count( $variations )
@@ -224,7 +225,7 @@ class AJAX_Metabox extends AJAX {
 		// Loop over variations and store each in postmeta.
 		$total_variations = count( $variations );
 		for ( $i = 0; $i < $total_variations; $i ++ ) {
-			add_post_meta(
+			update_post_meta(
 				$post->ID,
 				sprintf( 'optimizely_variations_%d', absint( $i ) ),
 				sanitize_text_field( $variations[ $i ] )
@@ -311,6 +312,7 @@ class AJAX_Metabox extends AJAX {
 
 		// Get the API response and check for errors.
 		$response = $this->api->post( '/pages', $event_page );
+		$this->log_request( $post->ID, 'POST', '/pages', $event_page, $response );
 		$this->maybe_send_error_response( $response );
 
 		// Ensure we got an ID.
@@ -384,6 +386,7 @@ class AJAX_Metabox extends AJAX {
 
 		// Get the API response and check for errors.
 		$response = $this->api->post( '/experiments', $experiment, true );
+		$this->log_request( $post->ID, 'POST', '/experiments', $experiment, $response );
 		$this->maybe_send_error_response( $response );
 
 		// Ensure we got an ID.
@@ -472,6 +475,7 @@ class AJAX_Metabox extends AJAX {
 
 		// Get the API response and check for errors.
 		$response = $this->api->post( '/pages', $targeting_page );
+		$this->log_request( $post->ID, 'POST', '/pages', $targeting_page, $response );
 		$this->maybe_send_error_response( $response );
 
 		// Ensure we got an ID.
@@ -498,9 +502,9 @@ class AJAX_Metabox extends AJAX {
 
 		// Load the variation template and swap out dynamic values.
 		$template = get_option( 'optimizely_x_variation_template' );
-		$template = str_replace( '$POST_ID', $post->ID, $template );
-		$template = str_replace( '$NEW_TITLE', $title, $template );
-		$template = str_replace( '$OLD_TITLE', $post->post_title, $template );
+		$template = str_replace( '$POST_ID', absint( $post->ID ), $template );
+		$template = str_replace( '$NEW_TITLE', esc_js( $title ), $template );
+		$template = str_replace( '$OLD_TITLE', esc_js( $post->post_title ), $template );
 
 		return array(
 			'actions' => array(
