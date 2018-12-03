@@ -56,13 +56,16 @@ class AJAX_Results extends AJAX {
 
 		// Ensure we have a post ID before proceeding.
 		$query_args = [
-			'meta_key' => 'optimizely_experiment_id', // Potentialy slow query
-			'meta_value' => $experiment_id, // Potentialy slow query
+			'meta_key'      => 'optimizely_experiment_id', // Potentialy slow query
+			'meta_value'    => $experiment_id, // Potentialy slow query
+			'post_type'     => 'any',
+			'no_found_rows' => true,
+			'posts_per_page' => 1,
 		];
 
 		$experiment_query = new \WP_Query( $query_args );
 
-		if ( ! $experiment_query->found_posts ) {
+		if ( ! $experiment_query->post_count ) {
 			wp_send_json_error( __( 'Missing a post attached to this experiment.', 'optimizely-x' ) );
 		}
 
@@ -140,11 +143,14 @@ class AJAX_Results extends AJAX {
 		$query_args = [
 			'meta_key' => 'optimizely_experiment_id', // Potential slow query
 			'meta_value' => $experiment_id, // Potential slow query
+			'post_type' => 'any',
+			'no_found_rows' => true,
+			'posts_per_page' => 1,
 		];
 
 		$experiment_query = new \WP_Query( $query_args );
 
-		if ( ! $experiment_query->found_posts ) {
+		if ( ! $experiment_query->post_count ) {
 			wp_send_json_error( __( 'Missing a post attached to this experiment.', 'optimizely-x' ) );
 		}
 
@@ -221,11 +227,14 @@ class AJAX_Results extends AJAX {
 		$query_args = [
 			'meta_key' => 'optimizely_experiment_id', // Potential slow query
 			'meta_value' => $experiment_id, // Potential slow query
+			'post_type' => 'any',
+			'no_found_rows' => true,
+			'posts_per_page' => 1,
 		];
 
 		$experiment_query = new \WP_Query( $query_args );
 
-		if ( ! $experiment_query->found_posts ) {
+		if ( ! $experiment_query->post_count ) {
 			wp_send_json_error( __( 'Missing a post attached to this experiment.', 'optimizely-x' ) );
 		}
 
