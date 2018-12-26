@@ -4,7 +4,7 @@ Tags: optimizely, ab testing, split testing, website optimization
 Requires at least: 3.0
 Tested up to: 4.9.1
 Donate link: N/A
-Stable tag: 1.2.1
+Stable tag: 1.2.3
 License: BSD 3-Clause
 License URI: https://opensource.org/licenses/BSD-3-Clause
 
@@ -31,6 +31,13 @@ Sign up at [Optimizely.com](http://www.optimizely.com).
 You're ready to start using Optimizely!
 
 == Changelog ==
+
+= 1.2.3 =
+* Allows experiments to be created while posts are still drafts.
+* Adds error handling for errors that happen during ajax on the Results page.
+* Resolves issue with slow meta query.
+* UI improvement: Remove button to start experiment for archived experiments.
+* Bug prevention: Rename template variables so that they don't override WP Globals.
 
 = 1.2.1 =
 * Fix an issue with multiple experiment IDs in post meta.
