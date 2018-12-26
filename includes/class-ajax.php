@@ -73,7 +73,7 @@ abstract class AJAX {
 	 * @param string $method The HTTP method.
 	 * @param string $operation The operation URL endpoint.
 	 * @param array $data Data included in the request.
-	 * @param WP_Error\array $response Response from the API request method.
+	 * @param WP_Error|array $response Response from the API request method.
 	 *                                 Either an error, object, or array.
 	 */
 	protected function log_request( $post_id, $method, $operation, $data, $response ) {

@@ -208,6 +208,13 @@ class AJAX_Metabox extends AJAX {
 			absint( $experiment_id )
 		);
 
+		/**
+		 * Also add the key to the post meta with the experiment ID as part of the key.
+		 * This allows for a performant meta query on WordPress.com
+		 */
+		$unique_key = '_optimizely_id_' . $experiment_id;
+		add_post_meta( $post->ID, $unique_key, true );
+
 		// Store the experiment status in postmeta.
 		update_post_meta(
 			$post->ID,
@@ -503,8 +510,8 @@ class AJAX_Metabox extends AJAX {
 		// Load the variation template and swap out dynamic values.
 		$template = get_option( 'optimizely_x_variation_template' );
 		$template = str_replace( '$POST_ID', absint( $post->ID ), $template );
-		$template = str_replace( '$NEW_TITLE', esc_js( $title ), $template );
-		$template = str_replace( '$OLD_TITLE', esc_js( $post->post_title ), $template );
+		$template = str_replace( '$NEW_TITLE', esc_html( $title ), $template );
+		$template = str_replace( '$OLD_TITLE', esc_html( $post->post_title ), $template );
 
 		return array(
 			'actions' => array(
