@@ -510,8 +510,8 @@ class AJAX_Metabox extends AJAX {
 		// Load the variation template and swap out dynamic values.
 		$template = get_option( 'optimizely_x_variation_template' );
 		$template = str_replace( '$POST_ID', absint( $post->ID ), $template );
-		$template = str_replace( '$NEW_TITLE', esc_html( $title ), $template );
-		$template = str_replace( '$OLD_TITLE', esc_html( $post->post_title ), $template );
+		$template = str_replace( '$NEW_TITLE', wp_json_encode( $title ), $template );
+		$template = str_replace( '$OLD_TITLE', wp_json_encode( $post->post_title ), $template );
 
 		return array(
 			'actions' => array(
