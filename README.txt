@@ -38,6 +38,7 @@ You're ready to start using Optimizely!
 * Resolves issue with slow meta query.
 * UI improvement: Remove button to start experiment for archived experiments.
 * Bug prevention: Rename template variables so that they don't override WP Globals.
+* Fix encoding issue for headline test.
 
 = 1.2.1 =
 * Fix an issue with multiple experiment IDs in post meta.
