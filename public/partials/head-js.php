@@ -7,10 +7,11 @@
  */
 
 // If we don't have a valid project ID, bail.
-$project_id = get_option( 'optimizely_x_project_id' );
+$project_id = (int) get_option( 'optimizely_x_project_id' );
 if ( empty( $project_id ) ) {
 	return;
 }
 ?>
-
-<script src="https://cdn.optimizely.com/js/<?php echo absint( $project_id ); ?>.js"></script>
+<link rel="prefetch" href="<?php echo esc_url( '//cdn.optimizely.com/js/' . $project_id . '.js' ); ?>">
+<link rel="preconnect" href="//logx.optimizely.com">
+<script src="<?php echo esc_url( 'https://cdn.optimizely.com/js/' . $project_id . '.js' ); ?>"></script>
