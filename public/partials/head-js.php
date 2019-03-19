@@ -11,7 +11,8 @@ $project_id = (int) get_option( 'optimizely_x_project_id' );
 if ( empty( $project_id ) ) {
 	return;
 }
+$url = 'https://cdn.optimizely.com/js/' . $project_id . '.js';
 ?>
-<link rel="prefetch" href="<?php echo esc_url( '//cdn.optimizely.com/js/' . $project_id . '.js' ); ?>">
+<link rel="preload" href="<?php echo esc_url( $url ); ?>" as="script" type="text/javascript" crossorigin="anonymous">
 <link rel="preconnect" href="//logx.optimizely.com">
-<script src="<?php echo esc_url( 'https://cdn.optimizely.com/js/' . $project_id . '.js' ); ?>"></script>
+<script src="<?php echo esc_url( $url ); ?>" crossorigin="anonymous"></script>
