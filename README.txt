@@ -39,6 +39,7 @@ You're ready to start using Optimizely!
 * UI improvement: Remove button to start experiment for archived experiments.
 * Bug prevention: Rename template variables so that they don't override WP Globals.
 * Fix encoding issue for headline test.
+* Add DNS prefetch and preconnect instructions for optimal performance.
 
 = 1.2.1 =
 * Fix an issue with multiple experiment IDs in post meta.
