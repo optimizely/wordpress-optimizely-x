@@ -224,11 +224,21 @@ class API {
 		if ( $extended_timeout ) {
 			$timeout = 60;
 		} else {
-			// Temporarily set all requests to 60 second timeout.
-			// Until cause of long API responses is fixed.
-			// See VIP Zendesk Ticket z-86051
-			$timeout = 60;
+			$timeout = 3;
 		}
+
+		/**
+		 * Filter allows extending the timeout.
+		 *
+		 * @since 1.2.3
+		 *
+		 * @param int $timeout Timeout in seconds.
+		 * @param string $method HTTP method.
+		 * @param string $operation API endpoint.
+		 * @param array $data Request data.
+		 * @param bool $extended_timeout Whether the timeout has been extended.
+		 */
+		$timeout = (int) apply_filters( 'optimizely_remote_request_timeout', $timeout, $method, $operation, $data, $extended_timeout );
 
 		// If the provided operation is a partial path, convert to a full URL.
 		if ( 0 !== strpos( $operation, self::BASE_URL ) ) {
