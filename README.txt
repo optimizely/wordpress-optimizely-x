@@ -2,7 +2,7 @@
 Contributors: arthuracs, jonslaught, bradtaylorsf, lucasoptimizely
 Tags: optimizely, ab testing, split testing, website optimization
 Requires at least: 3.0
-Tested up to: 4.9.1
+Tested up to: 5.4
 Donate link: N/A
 Stable tag: 1.2.3
 License: BSD 3-Clause
